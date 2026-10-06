@@ -96,14 +96,14 @@ export const generateArticle = async (req, res) => {
                 content = response.choices[0]?.message?.content || "";
             } catch (err) {
                 console.warn("Live Gemini API call failed, falling back to intelligent generator:", err.message);
-                content = generateArticleFallback(prompt, length);
+                content = await generateArticleFallback(prompt, length);
             }
         } else {
-            content = generateArticleFallback(prompt, length);
+            content = await generateArticleFallback(prompt, length);
         }
 
         if (!content) {
-            content = generateArticleFallback(prompt, length);
+            content = await generateArticleFallback(prompt, length);
         }
 
         await sql`
@@ -163,14 +163,14 @@ export const generateBlogTitle = async (req, res) => {
                 content = response.choices[0]?.message?.content || "";
             } catch (err) {
                 console.warn("Gemini call note:", err.message);
-                content = generateBlogTitlesFallback(prompt);
+                content = await generateBlogTitlesFallback(prompt);
             }
         } else {
-            content = generateBlogTitlesFallback(prompt);
+            content = await generateBlogTitlesFallback(prompt);
         }
 
         if (!content) {
-            content = generateBlogTitlesFallback(prompt);
+            content = await generateBlogTitlesFallback(prompt);
         }
 
         await sql`
@@ -235,14 +235,14 @@ export const humanizeText = async (req, res) => {
                 humanizedText = response.choices[0]?.message?.content || "";
             } catch (err) {
                 console.warn("Gemini call note:", err.message);
-                humanizedText = humanizeTextFallback(text);
+                humanizedText = await humanizeTextFallback(text);
             }
         } else {
-            humanizedText = humanizeTextFallback(text);
+            humanizedText = await humanizeTextFallback(text);
         }
 
         if (!humanizedText) {
-            humanizedText = humanizeTextFallback(text);
+            humanizedText = await humanizeTextFallback(text);
         }
 
         await sql`
@@ -540,14 +540,14 @@ ${resumeText}`;
                 review = response.choices[0]?.message?.content || "";
             } catch (err) {
                 console.warn("Gemini resume review note:", err.message);
-                review = resumeReviewFallback(resumeText);
+                review = await resumeReviewFallback(resumeText);
             }
         } else {
-            review = resumeReviewFallback(resumeText);
+            review = await resumeReviewFallback(resumeText);
         }
 
         if (!review) {
-            review = resumeReviewFallback(resumeText);
+            review = await resumeReviewFallback(resumeText);
         }
 
         await sql`
@@ -657,14 +657,14 @@ IMPORTANT: Return valid JSON only, without backticks or markdown fences.`;
                 result = JSON.parse(cleaned);
             } catch (err) {
                 console.warn("Gemini ATS score note:", err.message);
-                result = calculateATSScoreFallback(resumeText, jobDescription);
+                result = await calculateATSScoreFallback(resumeText, jobDescription);
             }
         } else {
-            result = calculateATSScoreFallback(resumeText, jobDescription);
+            result = await calculateATSScoreFallback(resumeText, jobDescription);
         }
 
         if (!result) {
-            result = calculateATSScoreFallback(resumeText, jobDescription);
+            result = await calculateATSScoreFallback(resumeText, jobDescription);
         }
 
         // Ensure proper typing of fields
@@ -765,14 +765,14 @@ export const chatWithPDF = async (req, res) => {
                 aiResponse = response.choices[0]?.message?.content || "";
             } catch (err) {
                 console.warn("Gemini PDF chat note:", err.message);
-                aiResponse = chatWithPDFFallback(message, pdfText, parsedHistory);
+                aiResponse = await chatWithPDFFallback(message, pdfText, parsedHistory);
             }
         } else {
-            aiResponse = chatWithPDFFallback(message, pdfText, parsedHistory);
+            aiResponse = await chatWithPDFFallback(message, pdfText, parsedHistory);
         }
 
         if (!aiResponse) {
-            aiResponse = chatWithPDFFallback(message, pdfText, parsedHistory);
+            aiResponse = await chatWithPDFFallback(message, pdfText, parsedHistory);
         }
 
         await sql`
