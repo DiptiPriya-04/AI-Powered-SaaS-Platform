@@ -5,6 +5,7 @@ import { useAuth } from '@clerk/clerk-react';
 import toast from 'react-hot-toast';
 import ATSResult from './ATSResult';
 import { useTheme } from '../context/ThemeContext';
+import { usePlan } from '../context/PlanContext';
 
 axios.defaults.baseURL = import.meta.env.VITE_BASE_URL;
 
@@ -16,6 +17,7 @@ const CalculateATSScore = () => {
   const [fileName, setFileName] = useState('');
   const { theme } = useTheme();
   const { getToken } = useAuth();
+  const { openUpgradeModal, refreshPlan } = usePlan();
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -48,13 +50,18 @@ const CalculateATSScore = () => {
         const formattedResult = formatATSResult(data.content);
         setResult(formattedResult);
         toast.success("ATS Score Calculated");
+        refreshPlan?.().catch(() => {});
       } else {
         toast.error(data.message);
+        if (data.message?.toLowerCase().includes("limit") || data.message?.toLowerCase().includes("upgrade") || data.message?.toLowerCase().includes("premium")) {
+          openUpgradeModal();
+        }
       }
     } catch (error) {
       toast.error(error.message || "Failed to calculate ATS score");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const formatATSResult = (data) => {

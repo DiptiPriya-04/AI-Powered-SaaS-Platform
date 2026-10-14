@@ -1,10 +1,11 @@
-﻿import { FileText, Sparkles, Copy } from 'lucide-react';
+import { FileText, Sparkles, Copy } from 'lucide-react';
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useAuth } from '@clerk/clerk-react';
 import toast from 'react-hot-toast';
 import Markdown from 'react-markdown';
 import { useTheme } from '../context/ThemeContext';
+import { usePlan } from '../context/PlanContext';
 
 axios.defaults.baseURL = import.meta.env.VITE_BASE_URL;
 
@@ -15,6 +16,7 @@ const ReviewResume = () => {
   const [fileName, setFileName] = useState('');
   const { theme } = useTheme();
   const { getToken } = useAuth();
+  const { openUpgradeModal, refreshPlan } = usePlan();
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -39,13 +41,18 @@ const ReviewResume = () => {
       if (data.success) {
         setContent(data.content);
         toast.success("Resume reviewed successfully");
+        refreshPlan?.().catch(() => {});
       } else {
         toast.error(data.message);
+        if (data.message?.toLowerCase().includes("limit") || data.message?.toLowerCase().includes("upgrade") || data.message?.toLowerCase().includes("premium")) {
+          openUpgradeModal();
+        }
       }
     } catch (error) {
       toast.error(error.response?.data?.message || error.message);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const copyToClipboard = () => {

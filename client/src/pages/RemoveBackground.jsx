@@ -1,9 +1,10 @@
-﻿import { Eraser, Sparkles, Download, X } from 'lucide-react';
+import { Eraser, Sparkles, Download, X } from 'lucide-react';
 import React, { useState, useRef } from 'react'
 import axios from 'axios'
 import { useAuth } from '@clerk/clerk-react';
 import toast from 'react-hot-toast';
 import { useTheme } from '../context/ThemeContext';
+import { usePlan } from '../context/PlanContext';
 
 axios.defaults.baseURL = import.meta.env.VITE_BASE_URL;
 
@@ -16,6 +17,7 @@ const RemoveBackground = () => {
   const fileInputRef = useRef(null)
   const { theme } = useTheme();
   const { getToken } = useAuth()
+  const { openUpgradeModal, refreshPlan } = usePlan();
 
   const handleFileChange = (e) => {
     const file = e.target.files[0]
@@ -55,13 +57,18 @@ const RemoveBackground = () => {
       if (data.success) {
         setContent(data.content)
         toast.success("Background removed successfully")
+        refreshPlan?.().catch(() => {})
       }else{
         toast.error(data.message)
+        if (data.message?.toLowerCase().includes("limit") || data.message?.toLowerCase().includes("upgrade") || data.message?.toLowerCase().includes("premium")) {
+          openUpgradeModal();
+        }
       }
     } catch (error) {
       toast.error(error.response?.data?.message || error.message)
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   const downloadImage = async () => {

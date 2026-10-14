@@ -17,6 +17,8 @@ import CalculateATSScore from './pages/CalculateATSScore';
 import HumanizeText from './pages/HumanizeText';
 import ChatWithPDF from './pages/ChatWithPDF';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
+import { PlanProvider } from './context/PlanContext';
+import UpgradeModal from './components/UpgradeModal';
 
 // Clerk wrapper component
 const ClerkThemeWrapper = ({ children, publishableKey }) => {
@@ -81,6 +83,7 @@ const AppContent = () => {
   return (
     <div>
       <Toaster />
+      <UpgradeModal />
       <Routes>
         <Route path='/' element={<Home />} />
         <Route path='/ai' element={<Layout />}>
@@ -105,7 +108,9 @@ const App = ({ publishableKey }) => {
   return (
     <ThemeProvider>
       <ClerkThemeWrapper publishableKey={publishableKey}>
-        <AppContent />
+        <PlanProvider>
+          <AppContent />
+        </PlanProvider>
       </ClerkThemeWrapper>
     </ThemeProvider>
   );

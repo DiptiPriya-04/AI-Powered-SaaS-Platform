@@ -1,8 +1,9 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Moon, Sun } from 'lucide-react';
+import { ArrowRight, Moon, Sun, Crown } from 'lucide-react';
 import { useClerk, UserButton, useUser, useAuth } from "@clerk/clerk-react";
 import { useTheme } from '../context/ThemeContext';
+import { usePlan } from '../context/PlanContext';
 import { flushSync } from 'react-dom';
 import axios from 'axios';
 
@@ -12,9 +13,8 @@ const Navbar = () => {
   const { getToken } = useAuth();
   const { openSignIn } = useClerk();
   const { theme, toggleTheme } = useTheme();
+  const { isPremium, openUpgradeModal } = usePlan();
   const themeButtonRef = useRef(null);
-  const [freeUsage, setFreeUsage] = useState(0);
-  const [userPlan, setUserPlan] = useState('free');
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     setMounted(true);
@@ -175,16 +175,31 @@ const Navbar = () => {
 
           {/* Clerk Auth */}
           {user ? (
-            <div className="bg-zinc-100 dark:bg-zinc-800 p-1 rounded-full border border-zinc-200 dark:border-zinc-700">
-              <UserButton 
-                afterSignOutUrl="/" 
-                appearance={{
-                  baseTheme: theme === 'dark' ? 'dark' : 'light',
-                  elements: {
-                    avatarBox: "h-8 w-8",
-                  }
-                }} 
-              />
+            <div className="flex items-center gap-2">
+              {isPremium ? (
+                <span className="px-2.5 py-1 text-xs font-bold uppercase tracking-wider bg-gradient-to-r from-amber-500 to-purple-600 text-white rounded-full flex items-center gap-1 shadow-sm">
+                  <Crown className="w-3 h-3 text-amber-200" /> PRO
+                </span>
+              ) : (
+                <button
+                  onClick={openUpgradeModal}
+                  className="px-2.5 py-1 text-xs font-semibold bg-indigo-500/10 text-indigo-500 hover:bg-indigo-500/20 border border-indigo-500/30 rounded-full flex items-center gap-1 transition-colors cursor-pointer"
+                >
+                  <Crown className="w-3 h-3 text-amber-500" />
+                  Upgrade
+                </button>
+              )}
+              <div className="bg-zinc-100 dark:bg-zinc-800 p-1 rounded-full border border-zinc-200 dark:border-zinc-700">
+                <UserButton 
+                  afterSignOutUrl="/" 
+                  appearance={{
+                    baseTheme: theme === 'dark' ? 'dark' : 'light',
+                    elements: {
+                      avatarBox: "h-8 w-8",
+                    }
+                  }} 
+                />
+              </div>
             </div>
           ) : (
             <button

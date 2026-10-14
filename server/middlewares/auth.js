@@ -17,15 +17,22 @@ export const auth = async (req, res, next) => {
             return res.status(401).json({ success: false, message: "Unauthorized access. Please log in." });
         }
 
-        const hasPremiumPlan = typeof authData.has === 'function' 
-            ? await authData.has({ plan: 'premium' }) 
-            : false;
+        let hasPremiumPlan = false;
+        try {
+            if (typeof authData?.has === 'function') {
+                hasPremiumPlan = Boolean(authData.has({ plan: 'premium' }));
+            }
+        } catch (e) {
+            hasPremiumPlan = false;
+        }
 
         const user = await clerkClient.users.getUser(userId);
         const freeUsage = user.publicMetadata?.free_usage ?? user.privateMetadata?.free_usage ?? 0;
+        const currentMetadataPlan = user.publicMetadata?.plan;
+        const resolvedPlan = (currentMetadataPlan === 'premium' || currentMetadataPlan === 'pro' || hasPremiumPlan) ? 'premium' : 'free';
 
         req.userId = userId;
-        req.plan = hasPremiumPlan ? 'premium' : (user.publicMetadata?.plan || 'free');
+        req.plan = resolvedPlan;
         req.free_usage = freeUsage;
 
         // Ensure publicMetadata has free_usage and plan for frontend visibility

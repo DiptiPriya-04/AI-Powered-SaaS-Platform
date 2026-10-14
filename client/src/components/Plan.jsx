@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useUser, useClerk } from '@clerk/clerk-react'
 import { Check, Zap, Sparkles, Shield, ArrowRight } from 'lucide-react'
 import { useTheme } from '../context/ThemeContext'
+import { usePlan } from '../context/PlanContext'
 
 const plans = [
   {
@@ -73,12 +74,31 @@ const Plan = ({ id = "Plan" }) => {
   const { isSignedIn } = useUser()
   const { openSignIn } = useClerk()
   const navigate = useNavigate()
+  const { plan: currentPlan, isPremium, upgradeToPlan, loading } = usePlan()
 
-  const handleAction = (planId) => {
+  const handleAction = async (planId) => {
     if (!isSignedIn) {
       openSignIn()
-    } else {
-      navigate('/ai')
+      return
+    }
+
+    if (planId === 'free') {
+      if (currentPlan === 'free') {
+        navigate('/ai')
+        return
+      }
+      const ok = await upgradeToPlan('free')
+      if (ok) navigate('/ai')
+      return
+    }
+
+    if (planId === 'pro' || planId === 'enterprise') {
+      if (isPremium) {
+        navigate('/ai')
+        return
+      }
+      const ok = await upgradeToPlan('premium')
+      if (ok) navigate('/ai')
     }
   }
 
@@ -193,20 +213,48 @@ const Plan = ({ id = "Plan" }) => {
                 </div>
 
                 {/* CTA Button */}
-                <button
-                  type="button"
-                  onClick={() => handleAction(plan.id)}
-                  className={`w-full py-3 px-4 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-all duration-200 cursor-pointer mb-6 ${
-                    isPopular
-                      ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/30 hover:shadow-indigo-600/50'
-                      : theme === 'dark'
-                        ? 'bg-zinc-800 hover:bg-zinc-700 text-white border border-zinc-700'
-                        : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-900 border border-zinc-300'
-                  }`}
-                >
-                  {plan.cta}
-                  <ArrowRight className="w-4 h-4" />
-                </button>
+                {(() => {
+                  const isCurrent = (plan.id === 'free' && !isPremium) || ((plan.id === 'pro' || plan.id === 'enterprise') && isPremium);
+                  let buttonText = plan.cta;
+                  if (isCurrent) {
+                    buttonText = "Current Plan";
+                  } else if (plan.id === 'free' && isPremium) {
+                    buttonText = "Switch to Starter Free";
+                  } else if (isPremium) {
+                    buttonText = "Included in Pro";
+                  }
+
+                  return (
+                    <button
+                      type="button"
+                      disabled={loading || (isCurrent && isSignedIn)}
+                      onClick={() => handleAction(plan.id)}
+                      className={`w-full py-3 px-4 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-all duration-200 cursor-pointer mb-6 ${
+                        isCurrent
+                          ? (theme === 'dark' ? 'bg-zinc-800 text-zinc-400 border border-zinc-700 cursor-default' : 'bg-zinc-100 text-zinc-500 border border-zinc-300 cursor-default')
+                          : isPopular
+                            ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/30 hover:shadow-indigo-600/50'
+                            : theme === 'dark'
+                              ? 'bg-zinc-800 hover:bg-zinc-700 text-white border border-zinc-700'
+                              : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-900 border border-zinc-300'
+                      }`}
+                    >
+                      {loading ? (
+                        <span className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                      ) : isCurrent ? (
+                        <>
+                          <Check className="w-4 h-4 text-emerald-500" />
+                          {buttonText}
+                        </>
+                      ) : (
+                        <>
+                          {buttonText}
+                          <ArrowRight className="w-4 h-4" />
+                        </>
+                      )}
+                    </button>
+                  );
+                })()}
 
                 {/* Feature List */}
                 <div className="pt-6 border-t border-zinc-200 dark:border-zinc-800/80 flex-grow">

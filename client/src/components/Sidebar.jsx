@@ -1,4 +1,4 @@
-import { Protect, useClerk, useUser } from '@clerk/clerk-react'
+import { useClerk, useUser } from '@clerk/clerk-react'
 import { 
     Eraser, 
     FileText, 
@@ -17,6 +17,7 @@ import {
 import React from 'react'
 import { NavLink } from 'react-router-dom'
 import { useTheme } from '../context/ThemeContext'
+import { usePlan } from '../context/PlanContext'
 
 const navItems = [
     {to: '/ai', label: 'Dashboard', Icon: House},
@@ -36,6 +37,7 @@ const Sidebar = ({ sidebar, setSidebar }) => {
     const { user } = useUser()
     const { signOut, openUserProfile } = useClerk()
     const { theme } = useTheme()
+    const { isPremium, freeUsage, openUpgradeModal } = usePlan()
 
     return (
         <div className={`w-60 flex flex-col justify-between items-center max-sm:absolute top-14 bottom-0 z-50 ${
@@ -45,7 +47,7 @@ const Sidebar = ({ sidebar, setSidebar }) => {
                 ? 'bg-zinc-950 border-r border-zinc-800' 
                 : 'bg-white border-r border-gray-200'
         }`}>
-            <div className='my-7 w-full'>
+            <div className='my-7 w-full overflow-y-auto flex-1'>
                 <img 
                     src={user.imageUrl} 
                     alt="User avatar" 
@@ -99,7 +101,7 @@ const Sidebar = ({ sidebar, setSidebar }) => {
                                     </span>
                                     {premium && (
                                         <span className="flex items-center gap-1 text-xs bg-gradient-to-r from-amber-500 to-amber-600 text-white px-2 py-0.5 rounded-full">
-                                            <Crown className="w-2 h-3" />
+                                            <Crown className="w-2.5 h-2.5" />
                                         </span>
                                     )}
                                 </>
@@ -109,13 +111,40 @@ const Sidebar = ({ sidebar, setSidebar }) => {
                 </div>
             </div>
 
-            <div className={`w-full border-t p-4 px-7 flex items-center justify-between ${
+            {/* Upgrade Card for Free Users */}
+            {!isPremium && (
+                <div className="w-full px-4 mb-2">
+                    <div className={`p-3 rounded-xl border transition-all ${
+                        theme === 'dark' 
+                            ? 'bg-gradient-to-br from-indigo-950/60 to-purple-950/40 border-indigo-500/30' 
+                            : 'bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-200'
+                    }`}>
+                        <div className="flex items-center gap-1.5 mb-1">
+                            <Crown className="w-3.5 h-3.5 text-amber-500" />
+                            <span className={`text-xs font-bold ${theme === 'dark' ? 'text-white' : 'text-zinc-900'}`}>
+                                Upgrade to Pro
+                            </span>
+                        </div>
+                        <p className={`text-[11px] leading-tight mb-2 ${theme === 'dark' ? 'text-zinc-400' : 'text-zinc-600'}`}>
+                            Unlimited AI creations & visual tools.
+                        </p>
+                        <button
+                            onClick={openUpgradeModal}
+                            className="w-full py-1.5 px-3 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-sm transition-all flex items-center justify-center gap-1 cursor-pointer"
+                        >
+                            Upgrade Plan
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            <div className={`w-full border-t p-4 px-6 flex items-center justify-between ${
                 theme === 'dark' ? 'border-zinc-800' : 'border-gray-200'
             }`}>
                 <div onClick={openUserProfile} className='flex gap-2 items-center cursor-pointer'>
                     <img 
                         src={user.imageUrl} 
-                        className={`w-8 rounded-full border ${
+                        className={`w-8 h-8 rounded-full border ${
                             theme === 'dark' ? 'border-zinc-700' : 'border-gray-300'
                         }`} 
                         alt="" 
@@ -126,10 +155,16 @@ const Sidebar = ({ sidebar, setSidebar }) => {
                         }`}>
                             {user.fullName}
                         </h1>
-                        <p className={`text-xs ${
+                        <p className={`text-xs flex items-center gap-1 ${
                             theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'
                         }`}>
-                            <Protect plan='premium' fallback="Free">Premium</Protect> Plan
+                            {isPremium ? (
+                                <span className="text-amber-500 font-semibold flex items-center gap-1">
+                                    <Crown className="w-3 h-3" /> Pro Plan
+                                </span>
+                            ) : (
+                                <span>Free Plan ({freeUsage}/30)</span>
+                            )}
                         </p>
                     </div>
                 </div>

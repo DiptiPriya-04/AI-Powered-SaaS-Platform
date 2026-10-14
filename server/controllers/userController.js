@@ -1,5 +1,5 @@
 import sql from "../configs/db.js";
-import { getAuth } from "@clerk/express";
+import { clerkClient, getAuth } from "@clerk/express";
 
 const getRequestUserId = (req) => {
     if (req.userId) return req.userId;
@@ -86,14 +86,65 @@ export const toggleLikeCreation = async (req, res) => {
 export const getUserData = async (req, res) => {
     try {
         const userId = getRequestUserId(req);
+        if (!userId) {
+            return res.status(401).json({ success: false, message: "Unauthorized" });
+        }
+
+        let userPlan = req.plan || 'free';
+        let freeUsage = req.free_usage ?? 0;
+
+        if (process.env.CLERK_SECRET_KEY) {
+            try {
+                const user = await clerkClient.users.getUser(userId);
+                userPlan = user.publicMetadata?.plan || userPlan;
+                freeUsage = user.publicMetadata?.free_usage ?? user.privateMetadata?.free_usage ?? freeUsage;
+            } catch (err) {
+                console.warn("Clerk fetch note in getUserData:", err.message);
+            }
+        }
+
         res.json({
             success: true,
             userId,
-            plan: req.plan || 'free',
-            free_usage: req.free_usage ?? 0
+            plan: userPlan,
+            free_usage: freeUsage
         });
     } catch (error) {
         console.error("getUserData error:", error);
         res.json({ success: false, message: error.message });
+    }
+};
+
+export const updateUserPlan = async (req, res) => {
+    try {
+        const userId = getRequestUserId(req);
+        if (!userId) {
+            return res.status(401).json({ success: false, message: "Unauthorized. Please log in." });
+        }
+
+        const { plan = 'premium' } = req.body;
+        const normalizedPlan = (plan === 'free') ? 'free' : 'premium';
+
+        if (process.env.CLERK_SECRET_KEY) {
+            await clerkClient.users.updateUserMetadata(userId, {
+                publicMetadata: {
+                    plan: normalizedPlan,
+                    plan_tier: plan
+                }
+            }).catch(err => {
+                console.warn("Clerk metadata update warning:", err.message);
+            });
+        }
+
+        res.json({
+            success: true,
+            message: normalizedPlan === 'premium'
+                ? "🎉 You have been upgraded to Premium Pro! Unlimited access unlocked."
+                : "Plan changed to Free Starter tier.",
+            plan: normalizedPlan
+        });
+    } catch (error) {
+        console.error("updateUserPlan error:", error);
+        res.status(500).json({ success: false, message: error.message || "Failed to update plan" });
     }
 };

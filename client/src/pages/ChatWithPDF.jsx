@@ -5,10 +5,12 @@ import { useAuth } from '@clerk/clerk-react';
 import toast from 'react-hot-toast';
 import Markdown from 'react-markdown';
 import { useTheme } from '../context/ThemeContext';
+import { usePlan } from '../context/PlanContext';
 
 axios.defaults.baseURL = import.meta.env.VITE_BASE_URL;
 
 const ChatWithPDF = () => {
+  const { openUpgradeModal, refreshPlan } = usePlan();
   const [pdfFile, setPdfFile] = useState(null);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -184,6 +186,7 @@ const ChatWithPDF = () => {
       if (data.success) {
         setConversation(data.chatHistory);
         setMessage('');
+        refreshPlan?.().catch(() => {});
         
         if (!chatHistory.some(item => item.fileName === pdfFile.name)) {
           setChatHistory(prev => [...prev, { fileName: pdfFile.name }]);
@@ -193,10 +196,19 @@ const ChatWithPDF = () => {
           `pdfChat_conv_${pdfFile.name}`,
           JSON.stringify(data.chatHistory)
         );
+      } else {
+        toast.error(data.message || 'Failed to process PDF');
+        if (data.message?.toLowerCase().includes("limit") || data.message?.toLowerCase().includes("upgrade") || data.message?.toLowerCase().includes("premium")) {
+          openUpgradeModal();
+        }
       }
     } catch (error) {
       console.error('Error:', error.response?.data || error.message);
-      toast.error(error.response?.data?.message || 'Failed to process PDF');
+      const msg = error.response?.data?.message || error.message || 'Failed to process PDF';
+      toast.error(msg);
+      if (msg.toLowerCase().includes("limit") || msg.toLowerCase().includes("upgrade") || msg.toLowerCase().includes("premium")) {
+        openUpgradeModal();
+      }
     } finally {
       setLoading(false);
     }

@@ -1,9 +1,10 @@
-﻿import { Image, Sparkles, Download } from 'lucide-react'
+import { Image, Sparkles, Download, Crown } from 'lucide-react'
 import React, { useState } from 'react'
 import axios from 'axios'
 import { useAuth } from '@clerk/clerk-react';
 import toast from 'react-hot-toast';
 import { useTheme } from '../context/ThemeContext';
+import { usePlan } from '../context/PlanContext';
 
 axios.defaults.baseURL = import.meta.env.VITE_BASE_URL;
 
@@ -18,6 +19,7 @@ const GenerateImages = () => {
   const [downloading, setDownloading] = useState(false)
   const { theme } = useTheme();
   const { getToken } = useAuth()
+  const { openUpgradeModal, refreshPlan, isPremium } = usePlan();
 
   const onSubmitHandler = async (e)=>{
     e.preventDefault();
@@ -31,13 +33,18 @@ const GenerateImages = () => {
       if (data.success) {
         setContent(data.content)
         toast.success("Image Generated")
+        refreshPlan?.().catch(() => {})
       }else{
         toast.error(data.message)
+        if (data.message?.toLowerCase().includes("limit") || data.message?.toLowerCase().includes("upgrade") || data.message?.toLowerCase().includes("premium")) {
+          openUpgradeModal();
+        }
       }
-      } catch (error) {
-        toast.error(error.response?.data?.message || error.message)
-      }
-    setLoading(false)
+    } catch (error) {
+      toast.error(error.response?.data?.message || error.message)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const downloadImage = async () => {

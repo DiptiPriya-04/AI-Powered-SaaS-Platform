@@ -5,6 +5,7 @@ import { useAuth } from '@clerk/clerk-react';
 import toast from 'react-hot-toast';
 import Markdown from 'react-markdown';
 import { useTheme } from '../context/ThemeContext';
+import { usePlan } from '../context/PlanContext';
 
 axios.defaults.baseURL = import.meta.env.VITE_BASE_URL;
 
@@ -21,6 +22,7 @@ const WriteArticle = () => {
   const [content, setContent] = useState('')
   const { theme } = useTheme();
   const { getToken } = useAuth()
+  const { openUpgradeModal, refreshPlan } = usePlan();
 
   const onSubmitHandler = async (e)=>{
     e.preventDefault();
@@ -35,13 +37,18 @@ const WriteArticle = () => {
       if(data.success){
         setContent(data.content)
         toast.success("Article Generated")
+        refreshPlan?.().catch(() => {})
       }else{
         toast.error(data.message)
+        if (data.message?.toLowerCase().includes("limit") || data.message?.toLowerCase().includes("upgrade") || data.message?.toLowerCase().includes("premium")) {
+          openUpgradeModal();
+        }
       }
     } catch (error) {
       toast.error(error.response?.data?.message || error.message)
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   const copyToClipboard = () => {

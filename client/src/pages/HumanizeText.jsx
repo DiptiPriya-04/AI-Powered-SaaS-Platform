@@ -5,6 +5,7 @@ import { useAuth } from '@clerk/clerk-react';
 import toast from 'react-hot-toast';
 import Markdown from 'react-markdown';
 import { useTheme } from '../context/ThemeContext';
+import { usePlan } from '../context/PlanContext';
 
 axios.defaults.baseURL = import.meta.env.VITE_BASE_URL;
 
@@ -15,6 +16,7 @@ const HumanizeText = () => {
   const [wordCount, setWordCount] = useState(0);
   const { theme } = useTheme();
   const { getToken } = useAuth();
+  const { openUpgradeModal, refreshPlan } = usePlan();
 
   const handleInputChange = (e) => {
     const text = e.target.value;
@@ -40,13 +42,18 @@ const HumanizeText = () => {
       if (data.success) {
         setContent(data.content);
         toast.success('Text humanized successfully');
+        refreshPlan?.().catch(() => {});
       } else {
         toast.error(data.message);
+        if (data.message?.toLowerCase().includes("limit") || data.message?.toLowerCase().includes("upgrade") || data.message?.toLowerCase().includes("premium")) {
+          openUpgradeModal();
+        }
       }
     } catch (error) {
       toast.error(error.message || 'Failed to humanize text');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const copyToClipboard = () => {

@@ -135,10 +135,33 @@ export const generateBlogTitle = async (req, res) => {
             return res.status(401).json({ success: false, message: "Unauthorized. Please log in." });
         }
 
-        const { prompt } = req.body;
-        if (!prompt) {
+        const { prompt, keyword, category } = req.body;
+        if (!prompt && !keyword) {
             return res.json({ success: false, message: "Please provide a topic or keyword" });
         }
+
+        // Cleanly extract topic and category
+        let cleanTopic = (keyword || "").trim();
+        let cleanCategory = (category || "").trim() || "General";
+
+        if (!cleanTopic && prompt) {
+            const kwMatch = prompt.match(/keyword\s+([^.\n]+?)(?:\s+in\s+the\s+category|\s*\.|\s*$)/i);
+            const catMatch = prompt.match(/category\s+([^.\n]+?)(?:\s*\.|\s*$)/i);
+            if (kwMatch) cleanTopic = kwMatch[1].trim();
+            if (catMatch) cleanCategory = catMatch[1].trim();
+
+            if (!cleanTopic) {
+                cleanTopic = prompt
+                    .replace(/^generate\s+(atleast\s+)?(very\s+good\s+)?(10\s+)?(catchy\s+)?(blog\s+)?titles?\s+(for|about|on)?\s*/i, '')
+                    .replace(/\bin\s+the\s+category\s+.*$/i, '')
+                    .replace(/\bwithin\s+500\s+words.*$/i, '')
+                    .replace(/\bdont\s+exceed.*$/i, '')
+                    .trim();
+            }
+        }
+        if (!cleanTopic) cleanTopic = "Content Strategy";
+
+        const effectivePrompt = prompt || `Generate 10 catchy blog titles for the keyword ${cleanTopic} in the category ${cleanCategory}.`;
 
         const plan = req.plan || 'free';
         const free_usage = req.free_usage ?? 0;
@@ -157,20 +180,23 @@ export const generateBlogTitle = async (req, res) => {
                 const AI = getAIClient();
                 const response = await AI.chat.completions.create({
                     model: "gemini-2.0-flash",
-                    messages: [{ role: "user", content: `Generate 10 catchy, viral blog titles for the topic: ${prompt}. Formatted as a list.` }],
-                    temperature: 0.7,
+                    messages: [{ 
+                        role: "user", 
+                        content: `Generate exactly 10 fresh, catchy, and viral blog post titles for "${cleanTopic}" in the "${cleanCategory}" category. Use diverse angles (How-To, Listicle, Contrarian, Roadmap, Expert Secrets). Formatted as a numbered list from 1 to 10 with bold titles.` 
+                    }],
+                    temperature: 0.85,
                 });
                 content = response.choices[0]?.message?.content || "";
             } catch (err) {
                 console.warn("Gemini call note:", err.message);
-                content = await generateBlogTitlesFallback(prompt);
+                content = await generateBlogTitlesFallback(effectivePrompt, cleanTopic, cleanCategory);
             }
         } else {
-            content = await generateBlogTitlesFallback(prompt);
+            content = await generateBlogTitlesFallback(effectivePrompt, cleanTopic, cleanCategory);
         }
 
         if (!content) {
-            content = await generateBlogTitlesFallback(prompt);
+            content = await generateBlogTitlesFallback(effectivePrompt, cleanTopic, cleanCategory);
         }
 
         await sql`
