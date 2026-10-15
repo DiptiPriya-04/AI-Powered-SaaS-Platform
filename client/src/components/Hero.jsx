@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { assets } from '../assets/assets'
 import { AuroraText } from './magicui/aurora-text'
 import { useTheme } from '../context/ThemeContext'
+import gsap from 'gsap'
 
 const Hero = () => {
   const navigate = useNavigate()
@@ -16,11 +17,7 @@ const Hero = () => {
   const containerRef = useRef(null)
   
   useEffect(() => {
-    // Import GSAP from CDN
-    const script = document.createElement('script')
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js'
-    script.onload = () => {
-      const { gsap } = window
+    const ctx = gsap.context(() => {
       
       // Set initial states
       gsap.set(containerRef.current, { opacity: 0 })
@@ -283,26 +280,17 @@ const Hero = () => {
       }
       
       heroRef.current?.addEventListener('mousemove', handleMouseMove)
-      
-      // Cleanup function
-      return () => {
-        heroRef.current?.removeEventListener('mousemove', handleMouseMove)
-      }
-    }
-    
-    document.head.appendChild(script)
-    
+    }, heroRef)
+
     return () => {
-      if (document.head.contains(script)) {
-        document.head.removeChild(script)
-      }
+      ctx.revert()
     }
   }, [])
 
   return (
     <div 
       ref={heroRef}
-      className={`px-4 sm:px-20 xl:px-32 relative inline-flex flex-col w-full justify-center min-h-screen overflow-hidden ${
+      className={`px-4 sm:px-20 xl:px-32 relative inline-flex flex-col w-full justify-center min-h-[85vh] py-12 md:py-20 overflow-hidden ${
         theme === 'dark' ? 'bg-zinc-950' : 'bg-white'
       }`}
     >

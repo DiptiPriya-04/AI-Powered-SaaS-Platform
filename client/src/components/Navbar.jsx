@@ -87,29 +87,6 @@ const Navbar = () => {
     );
   };
 
-  useEffect(() => {
-    setMounted(true);
-    
-    // Load user metadata when user changes
-    if (user) {
-      const metadata = user.publicMetadata || {};
-      setFreeUsage(metadata.free_usage ?? 0);
-      setUserPlan(metadata.plan || 'free');
-
-      // Also sync live user data from backend
-      getToken().then(token => {
-        if (!token) return;
-        axios.get('/api/user/get-user-data', {
-          headers: { Authorization: `Bearer ${token}` }
-        }).then(res => {
-          if (res.data?.success) {
-            setFreeUsage(res.data.free_usage ?? 0);
-            setUserPlan(res.data.plan || 'free');
-          }
-        }).catch(() => {});
-      }).catch(() => {});
-    }
-  }, [user, getToken]);
 
   return (
     <nav className="fixed w-full max-w-7xl mx-auto py-2 px-4 rounded-full top-5 z-50 backdrop-blur-4xl bg-white/80 dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-700 left-1/2 transform -translate-x-1/2 transition-colors">

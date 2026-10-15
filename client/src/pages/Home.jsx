@@ -15,7 +15,7 @@ const Home = () => {
     <div className="min-h-screen flex flex-col bg-white dark:bg-zinc-950">
       <Navbar/>
       <main className="relative flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 pt-24 pb-12 overflow-hidden">
-        <div className="space-y-20 md:space-y-32">
+        <div className="space-y-16 md:space-y-20">
           <Hero id="Hero"/>
           <AiTools id="AiTools"/>
           <HowItWorks id="How It Works"/>

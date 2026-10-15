@@ -1,6 +1,10 @@
 import React, { useRef, useEffect, useState } from 'react'
 import { ChevronDown } from 'lucide-react'
 import { useTheme } from '../context/ThemeContext'
+import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+
+gsap.registerPlugin(ScrollTrigger)
 
 const FAQ = () => {
   const { theme } = useTheme()
@@ -62,50 +66,26 @@ const FAQ = () => {
   ];
 
   useEffect(() => {
-    // GSAP animation setup
-    const script = document.createElement('script')
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js'
-    script.onload = () => {
-      const { gsap } = window
+    const ctx = gsap.context(() => {
+      const mainTL = gsap.timeline({
+        scrollTrigger: {
+          trigger: containerRef.current,
+          start: "top 90%",
+          toggleActions: "play none none none"
+        }
+      })
       
-      const scrollScript = document.createElement('script')
-      scrollScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js'
-      scrollScript.onload = () => {
-        gsap.registerPlugin(window.ScrollTrigger)
-        
-        gsap.set([titleRef.current, subtitleRef.current], {
-          opacity: 0,
-          y: 30
-        })
-        
-        const mainTL = gsap.timeline({
-          scrollTrigger: {
-            trigger: containerRef.current,
-            start: "top 85%",
-            toggleActions: "play none none reverse"
-          }
-        })
-        
-        mainTL.to(titleRef.current, {
-          opacity: 1,
-          y: 0,
-          duration: 0.8,
-          ease: "power2.out"
-        })
-        .to(subtitleRef.current, {
-          opacity: 1,
-          y: 0,
-          duration: 0.6,
-          ease: "power2.out"
-        }, "-=0.4")
-      }
-      document.head.appendChild(scrollScript)
-    }
-    document.head.appendChild(script)
-    
+      mainTL.from([titleRef.current, subtitleRef.current], {
+        opacity: 0,
+        y: 30,
+        duration: 0.7,
+        stagger: 0.2,
+        ease: "power2.out"
+      })
+    }, containerRef)
+
     return () => {
-      const scripts = document.querySelectorAll('script[src*="gsap"]')
-      scripts.forEach(script => document.head.removeChild(script))
+      ctx.revert()
     }
   }, [])
 

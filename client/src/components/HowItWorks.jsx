@@ -2,6 +2,10 @@ import React, { useRef, useEffect } from 'react'
 import { useUser } from '@clerk/clerk-react'
 import { steps } from '../assets/assets'
 import { useTheme } from '../context/ThemeContext'
+import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+
+gsap.registerPlugin(ScrollTrigger)
 
 const HowItWorks = () => {
   const { user } = useUser()
@@ -13,62 +17,7 @@ const HowItWorks = () => {
   const backgroundRef = useRef(null)
 
   useEffect(() => {
-    const script = document.createElement('script')
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js'
-    script.onload = () => {
-      const { gsap } = window
-      
-      const scrollScript = document.createElement('script')
-      scrollScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js'
-      scrollScript.onload = () => {
-        gsap.registerPlugin(window.ScrollTrigger)
-        
-        gsap.set([titleRef.current, subtitleRef.current], {
-          opacity: 0,
-          y: 30
-        })
-        
-        gsap.set(stepsRef.current, {
-          opacity: 0,
-          y: 40
-        })
-        
-        const mainTL = gsap.timeline({
-          scrollTrigger: {
-            trigger: containerRef.current,
-            start: "top 85%",
-            toggleActions: "play none none reverse"
-          }
-        })
-        
-        mainTL.to(titleRef.current, {
-          opacity: 1,
-          y: 0,
-          duration: 0.8,
-          ease: "power2.out"
-        })
-        .to(subtitleRef.current, {
-          opacity: 1,
-          y: 0,
-          duration: 0.6,
-          ease: "power2.out"
-        }, "-=0.4")
-        .to(stepsRef.current, {
-          opacity: 1,
-          y: 0,
-          duration: 0.6,
-          stagger: 0.2,
-          ease: "power2.out"
-        }, "-=0.2")
-      }
-      document.head.appendChild(scrollScript)
-    }
-    document.head.appendChild(script)
-    
-    return () => {
-      const scripts = document.querySelectorAll('script[src*="gsap"]')
-      scripts.forEach(script => document.head.removeChild(script))
-    }
+    // Component mounted cleanly
   }, [])
 
   return (

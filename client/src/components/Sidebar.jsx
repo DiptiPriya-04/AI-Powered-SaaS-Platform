@@ -49,7 +49,7 @@ const Sidebar = ({ sidebar, setSidebar }) => {
         }`}>
             <div className='my-7 w-full overflow-y-auto flex-1'>
                 <img 
-                    src={user.imageUrl} 
+                    src={user?.imageUrl || ''} 
                     alt="User avatar" 
                     className={`w-13 rounded-full mx-auto cursor-pointer border-2 ${
                         theme === 'dark' 
@@ -64,7 +64,7 @@ const Sidebar = ({ sidebar, setSidebar }) => {
                     }`} 
                     onClick={openUserProfile}
                 >
-                    {user.fullName}
+                    {user?.fullName || 'User'}
                 </h1>
                 <div className='px-6 mt-5 text-sm font-medium'>
                     {navItems.map(({to, label, Icon, premium}) => (
@@ -143,7 +143,7 @@ const Sidebar = ({ sidebar, setSidebar }) => {
             }`}>
                 <div onClick={openUserProfile} className='flex gap-2 items-center cursor-pointer'>
                     <img 
-                        src={user.imageUrl} 
+                        src={user?.imageUrl || ''} 
                         className={`w-8 h-8 rounded-full border ${
                             theme === 'dark' ? 'border-zinc-700' : 'border-gray-300'
                         }`} 
@@ -153,7 +153,7 @@ const Sidebar = ({ sidebar, setSidebar }) => {
                         <h1 className={`text-sm font-medium ${
                             theme === 'dark' ? 'text-white' : 'text-gray-900'
                         }`}>
-                            {user.fullName}
+                            {user?.fullName || 'User'}
                         </h1>
                         <p className={`text-xs flex items-center gap-1 ${
                             theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'

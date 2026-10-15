@@ -3,6 +3,10 @@ import { AiToolsData } from '../assets/assets'
 import { useNavigate } from 'react-router-dom'
 import { useUser } from '@clerk/clerk-react'
 import { useTheme } from '../context/ThemeContext'
+import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+
+gsap.registerPlugin(ScrollTrigger)
 
 const AiTools = () => {
   const navigate = useNavigate()
@@ -18,157 +22,7 @@ const AiTools = () => {
   const backgroundRef = useRef(null)
   
   useEffect(() => {
-    // Load GSAP
-    const script = document.createElement('script')
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js'
-    script.onload = () => {
-      const { gsap } = window
-      
-      // Load ScrollTrigger
-      const scrollScript = document.createElement('script')
-      scrollScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js'
-      scrollScript.onload = () => {
-        gsap.registerPlugin(window.ScrollTrigger)
-        
-        // Set initial states - more subtle
-        gsap.set([titleRef.current, subtitleRef.current], {
-          opacity: 0,
-          y: 30
-        })
-        
-        gsap.set(toolCardsRef.current, {
-          opacity: 0,
-          y: 40,
-          scale: 0.95
-        })
-        
-        // Main entrance animation - smoother and faster
-        const mainTL = gsap.timeline({
-          scrollTrigger: {
-            trigger: containerRef.current,
-            start: "top 85%",
-            toggleActions: "play none none reverse"
-          }
-        })
-        
-        // Title animation - elegant entrance
-        mainTL.to(titleRef.current, {
-          opacity: 1,
-          y: 0,
-          duration: 0.8,
-          ease: "power2.out"
-        })
-        
-        // Subtitle follows quickly
-        .to(subtitleRef.current, {
-          opacity: 1,
-          y: 0,
-          duration: 0.6,
-          ease: "power2.out"
-        }, "-=0.4")
-        
-        // Cards animate in sequence - more refined
-        .to(toolCardsRef.current, {
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          duration: 0.6,
-          ease: "power2.out",
-          stagger: {
-            amount: 0.8,
-            from: "start"
-          }
-        }, "-=0.2")
-        
-        // Enhanced but subtle card interactions
-        toolCardsRef.current.forEach((card, index) => {
-          if (card) {
-            let hoverTL = gsap.timeline({ paused: true })
-            
-            // Create hover timeline once
-            hoverTL
-              .to(card, {
-                y: -8,
-                scale: 1.02,
-                duration: 0.3,
-                ease: "power2.out"
-              }, 0)
-              .to(card.querySelector('.tool-icon'), {
-                scale: 1.1,
-                duration: 0.3,
-                ease: "back.out(1.7)"
-              }, 0)
-              .to(card.querySelector('.card-glow'), {
-                opacity: 0.08,
-                duration: 0.3,
-                ease: "power2.out"
-              }, 0)
-            
-            // Mouse events
-            card.addEventListener('mouseenter', () => {
-              hoverTL.play()
-            })
-            
-            card.addEventListener('mouseleave', () => {
-              hoverTL.reverse()
-            })
-            
-            // Subtle click feedback
-            card.addEventListener('mousedown', () => {
-              gsap.to(card, {
-                scale: 0.98,
-                duration: 0.1,
-                ease: "power2.out"
-              })
-            })
-            
-            card.addEventListener('mouseup', () => {
-              gsap.to(card, {
-                scale: 1.02,
-                duration: 0.2,
-                ease: "back.out(2)"
-              })
-            })
-          }
-        })
-        
-        // Subtle parallax - much gentler
-        gsap.to(toolCardsRef.current, {
-          y: -20,
-          scrollTrigger: {
-            trigger: toolsGridRef.current,
-            start: "top bottom",
-            end: "bottom top",
-            scrub: 2
-          }
-        })
-        
-        // Background elements gentle animation
-        gsap.to(backgroundRef.current.children, {
-          y: -30,
-          scrollTrigger: {
-            trigger: containerRef.current,
-            start: "top bottom",
-            end: "bottom top",
-            scrub: 3
-          }
-        })
-      }
-      
-      document.head.appendChild(scrollScript)
-    }
-    
-    document.head.appendChild(script)
-    
-    return () => {
-      // Cleanup
-      const scripts = document.querySelectorAll('script[src*="gsap"]')
-      scripts.forEach(script => {
-        if (document.head.contains(script)) {
-          document.head.removeChild(script)
-        }
-      })
-    }
+    // Component mounted cleanly
   }, [])
 
   return (
@@ -225,10 +79,10 @@ const AiTools = () => {
           <div 
             key={index} 
             ref={el => toolCardsRef.current[index] = el}
-            className={`group relative p-6 rounded-2xl backdrop-blur-sm border cursor-pointer transition-all duration-300 ${
+            className={`group relative p-6 rounded-2xl backdrop-blur-sm border cursor-pointer transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl ${
               theme === 'dark'
-                ? 'bg-zinc-900/80 border-zinc-800/50 hover:border-zinc-700/50'
-                : 'bg-white/90 border-zinc-200/80 hover:border-zinc-300/80'
+                ? 'bg-zinc-900/90 border-zinc-800/80 hover:border-indigo-500/40 hover:bg-zinc-900'
+                : 'bg-white/95 border-zinc-200/90 hover:border-indigo-500/40 hover:bg-white'
             }`}
             onClick={() => navigate(tool.path)}
           >
