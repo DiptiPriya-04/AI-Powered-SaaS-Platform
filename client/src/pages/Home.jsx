@@ -18,7 +18,7 @@ const Home = () => {
         <div className="space-y-16 md:space-y-20">
           <Hero id="Hero"/>
           <AiTools id="AiTools"/>
-          <HowItWorks id="How It Works"/>
+          <HowItWorks id="HowItWorks"/>
           <Testimonial id="Testimonial" />
           <Plan id="Plan"/>
           <FAQ id="FAQ"/>

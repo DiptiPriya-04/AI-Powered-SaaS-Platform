@@ -1,4 +1,4 @@
-﻿import { useAuth, useUser } from '@clerk/clerk-react'
+import { useAuth, useUser } from '@clerk/clerk-react'
 import React, { useEffect, useState } from 'react'
 import { Heart } from 'lucide-react'
 import axios from 'axios'
@@ -61,42 +61,71 @@ const Community = () => {
       <div className={`h-full w-full rounded-xl overflow-y-auto ${
         theme === 'dark' ? 'bg-zinc-950' : 'bg-gray-100'
       }`}>
-        <div className='columns-1 sm:columns-2 lg:columns-3 gap-4 p-4'>
-          {creations.map((creation, index) => (
-            <div key={index} className='relative group mb-4 break-inside-avoid'>
-              <img 
-                src={creation.content} 
-                alt="" 
-                className='w-full h-auto rounded-lg object-cover transition-transform duration-300 group-hover:scale-[1.02]' 
-              />
+        {creations.length > 0 ? (
+          <div className='columns-1 sm:columns-2 lg:columns-3 gap-4 p-4'>
+            {creations.map((creation, index) => {
+              const likesArray = Array.isArray(creation.likes) ? creation.likes : [];
+              const isLiked = user?.id ? likesArray.includes(user.id.toString()) : false;
 
-              <div className={`absolute inset-0 flex flex-col justify-end p-3 rounded-lg ${
-                theme === 'dark'
-                  ? 'group-hover:bg-gradient-to-b from-transparent to-black/80'
-                  : 'group-hover:bg-gradient-to-b from-transparent to-gray-900/80'
-              }`}>
-                <p className={`text-sm hidden group-hover:block mb-2 ${
-                  theme === 'dark' ? 'text-white' : 'text-gray-100'
-                }`}>{creation.prompt}</p>
-                <div className='flex gap-1 items-center justify-end group-hover:justify-between'>
-                  <p className={`text-sm ${
-                    theme === 'dark' ? 'text-white' : 'text-gray-100'
-                  }`}>{creation.likes.length}</p>
-                  <Heart 
-                    onClick={() => imageLikeToggle(creation.id)} 
-                    className={`min-w-5 h-5 hover:scale-110 cursor-pointer transition-transform ${
-                      creation.likes.includes(user.id) 
-                        ? 'fill-red-500 text-red-600' 
-                        : theme === 'dark' 
-                          ? 'text-white' 
-                          : 'text-gray-100'
-                    }`}
+              return (
+                <div key={creation.id || index} className='relative group mb-4 break-inside-avoid rounded-lg overflow-hidden'>
+                  <img 
+                    src={creation.content} 
+                    alt={creation.prompt || "Community creation"} 
+                    className='w-full h-auto rounded-lg object-cover transition-transform duration-300 group-hover:scale-[1.02]' 
                   />
+
+                  <div className={`absolute inset-0 flex flex-col justify-end p-3 rounded-lg transition-opacity duration-200 ${
+                    theme === 'dark'
+                      ? 'group-hover:bg-gradient-to-b from-transparent via-black/40 to-black/80'
+                      : 'group-hover:bg-gradient-to-b from-transparent via-gray-900/40 to-gray-900/80'
+                  }`}>
+                    {creation.prompt && (
+                      <p className={`text-sm hidden group-hover:block mb-2 font-medium line-clamp-3 ${
+                        theme === 'dark' ? 'text-white' : 'text-gray-100'
+                      }`}>{creation.prompt}</p>
+                    )}
+                    <div className='flex gap-1.5 items-center justify-end group-hover:justify-between'>
+                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                        theme === 'dark' ? 'bg-black/60 text-white' : 'bg-gray-800/60 text-gray-100'
+                      }`}>
+                        {likesArray.length} {likesArray.length === 1 ? 'like' : 'likes'}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => imageLikeToggle(creation.id)}
+                        className="p-1 rounded-full hover:bg-white/20 transition-colors focus:outline-none"
+                        aria-label="Like creation"
+                      >
+                        <Heart 
+                          className={`w-5 h-5 hover:scale-110 cursor-pointer transition-transform ${
+                            isLiked
+                              ? 'fill-red-500 text-red-500' 
+                              : theme === 'dark' 
+                                ? 'text-white' 
+                                : 'text-gray-100'
+                          }`}
+                        />
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          ))}
-        </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center h-full p-8 text-center">
+            <Heart className={`w-12 h-12 mb-3 opacity-40 ${
+              theme === 'dark' ? 'text-zinc-500' : 'text-gray-400'
+            }`} />
+            <h3 className="text-lg font-semibold mb-1">No community creations yet</h3>
+            <p className={`text-sm max-w-sm ${
+              theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'
+            }`}>
+              Generate stunning AI images in Generate Images tool and choose "Make this image public" to publish them here!
+            </p>
+          </div>
+        )}
       </div>
     </div>
   ) : (

@@ -117,8 +117,8 @@ const ChatWithPDF = () => {
           }
         }
       } catch (error) {
-        console.error('Initial data load error:', error);
-        toast.error(error.response?.data?.message || 'Failed to load initial data');
+        console.warn('Initial PDF chat history note:', error.response?.data?.message || error.message);
+        // Do not show an error toast on page mount when user simply has no prior chats
       }
     };
     fetchInitialData();

@@ -6,7 +6,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
 gsap.registerPlugin(ScrollTrigger)
 
-const Testimonial = () => {
+const Testimonial = ({ id = "Testimonial" }) => {
     const { theme } = useTheme()
     const containerRef = useRef(null)
     const titleRef = useRef(null)
@@ -26,6 +26,7 @@ const Testimonial = () => {
 
     return (
         <div 
+            id={id}
             ref={containerRef} 
             className={`px-4 sm:px-20 xl:px-32 py-24 relative overflow-hidden ${
                 theme === 'dark' ? 'bg-zinc-950' : 'bg-white'
