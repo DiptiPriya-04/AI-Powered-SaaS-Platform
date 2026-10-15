@@ -26,28 +26,39 @@ const WriteArticle = () => {
 
   const onSubmitHandler = async (e)=>{
     e.preventDefault();
+    if (!input.trim()) {
+      toast.error('Please enter an article topic');
+      return;
+    }
+
     try {
-      setLoading(true)
-      const prompt = `Write an article about ${input} in ${selectedLength.text} only. Write it just like a Human and don't exceed the length limit.`
+      setLoading(true);
+      const topic = input.trim();
+      const prompt = `Write a comprehensive, engaging article about ${topic} in ${selectedLength.text}.`;
 
-      const {data} = await axios.post('/api/ai/generate-article', {prompt, length:selectedLength.length}, {
-        headers: {Authorization: `Bearer ${await getToken()}`}
-      })
+      const { data } = await axios.post('/api/ai/generate-article', {
+        topic,
+        prompt,
+        length: selectedLength.length,
+        lengthText: selectedLength.text
+      }, {
+        headers: { Authorization: `Bearer ${await getToken()}` }
+      });
 
-      if(data.success){
-        setContent(data.content)
-        toast.success("Article Generated")
-        refreshPlan?.().catch(() => {})
-      }else{
-        toast.error(data.message)
+      if (data.success) {
+        setContent(data.content);
+        toast.success("Article Generated");
+        refreshPlan?.().catch(() => {});
+      } else {
+        toast.error(data.message);
         if (data.message?.toLowerCase().includes("limit") || data.message?.toLowerCase().includes("upgrade") || data.message?.toLowerCase().includes("premium")) {
           openUpgradeModal();
         }
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || error.message)
+      toast.error(error.response?.data?.message || error.message);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 

@@ -5,6 +5,7 @@ import OpenAI from "openai";
 import sql from "../configs/db.js";
 import pdfModule from "pdf-parse/lib/pdf-parse.js";
 import {
+    extractCleanTopic,
     generateArticleFallback,
     generateBlogTitlesFallback,
     humanizeTextFallback,
@@ -67,9 +68,10 @@ export const generateArticle = async (req, res) => {
             return res.status(401).json({ success: false, message: "Unauthorized. Please log in." });
         }
 
-        const { prompt, length = 800 } = req.body;
-        if (!prompt) {
-            return res.json({ success: false, message: "Please provide a topic prompt" });
+        const { prompt, topic, length = 800 } = req.body;
+        const targetTopic = (topic || "").trim() || extractCleanTopic(prompt);
+        if (!targetTopic) {
+            return res.json({ success: false, message: "Please provide an article topic" });
         }
 
         const plan = req.plan || 'free';
@@ -89,26 +91,29 @@ export const generateArticle = async (req, res) => {
                 const AI = getAIClient();
                 const response = await AI.chat.completions.create({
                     model: "gemini-2.0-flash",
-                    messages: [{ role: "user", content: prompt }],
+                    messages: [{ 
+                        role: "user", 
+                        content: `Write an in-depth, authoritative, engaging article about "${targetTopic}". Use clear markdown headings, bullet points, and practical takeaways. Aim for approximately ${length} words.` 
+                    }],
                     temperature: 0.7,
                     max_tokens: Number(length) || 800,
                 });
                 content = response.choices[0]?.message?.content || "";
             } catch (err) {
                 console.warn("Live Gemini API call failed, falling back to intelligent generator:", err.message);
-                content = await generateArticleFallback(prompt, length);
+                content = await generateArticleFallback(targetTopic, length);
             }
         } else {
-            content = await generateArticleFallback(prompt, length);
+            content = await generateArticleFallback(targetTopic, length);
         }
 
         if (!content) {
-            content = await generateArticleFallback(prompt, length);
+            content = await generateArticleFallback(targetTopic, length);
         }
 
         await sql`
             INSERT INTO creations(user_id, prompt, content, type)
-            VALUES (${userId}, ${prompt}, ${content}, 'article')
+            VALUES (${userId}, ${`Article on ${targetTopic}`}, ${content}, 'article')
         `.catch(e => console.warn("DB insert note:", e.message));
 
         const updatedUsage = await incrementUsage(userId, free_usage, plan);
