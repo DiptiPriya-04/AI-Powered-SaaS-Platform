@@ -175,16 +175,21 @@ const Navbar = () => {
 
           {/* Clerk Auth */}
           {user ? (
-            <div className="bg-zinc-100 dark:bg-zinc-800 p-1 rounded-full border border-zinc-200 dark:border-zinc-700">
-              <UserButton 
-                afterSignOutUrl="/" 
-                appearance={{
-                  baseTheme: theme === 'dark' ? 'dark' : 'light',
-                  elements: {
-                    avatarBox: "h-8 w-8",
-                  }
-                }} 
-              />
+            <div className="flex items-center gap-2">
+              <span className="hidden sm:inline-block text-xs px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-500 font-medium border border-blue-500/20">
+                {userPlan === 'premium' ? '👑 Premium' : `${Math.max(0, 30 - freeUsage)} credits`}
+              </span>
+              <div className="bg-zinc-100 dark:bg-zinc-800 p-1 rounded-full border border-zinc-200 dark:border-zinc-700">
+                <UserButton 
+                  afterSignOutUrl="/" 
+                  appearance={{
+                    baseTheme: theme === 'dark' ? 'dark' : 'light',
+                    elements: {
+                      avatarBox: "h-8 w-8",
+                    }
+                  }} 
+                />
+              </div>
             </div>
           ) : (
             <button

@@ -78,7 +78,11 @@ const Plan = ({ id = "Plan" }) => {
     if (!isSignedIn) {
       openSignIn()
     } else {
-      navigate('/ai')
+      if (planId === 'free') {
+        navigate('/ai')
+      } else {
+        navigate(`/ai?upgrade=${planId}`)
+      }
     }
   }
 

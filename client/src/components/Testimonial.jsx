@@ -80,7 +80,7 @@ const Testimonial = () => {
                 }, "-=0.2")
                 
                 // Enhanced but subtle card interactions
-                testimonialCardsRef.current.forEach((card, index) => {
+                testimonialCardsRef.current.forEach((card) => {
                     if (card) {
                         let hoverTL = gsap.timeline({ paused: true })
                         

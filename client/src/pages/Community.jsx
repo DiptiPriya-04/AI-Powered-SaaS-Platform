@@ -1,11 +1,11 @@
-﻿import { useAuth, useUser } from '@clerk/clerk-react'
-import React, { useEffect, useState } from 'react'
-import { Heart } from 'lucide-react'
+import { useAuth, useUser } from '@clerk/clerk-react'
+import React, { useEffect, useState, useCallback } from 'react'
+import { Heart, Sparkles } from 'lucide-react'
 import axios from 'axios'
 import toast from 'react-hot-toast'
 import { useTheme } from '../context/ThemeContext'
 
-axios.defaults.baseURL = import.meta.env.VITE_BASE_URL
+axios.defaults.baseURL = import.meta.env.VITE_BASE_URL || ''
 
 const Community = () => {
   const [creations, setCreations] = useState([])
@@ -14,26 +14,32 @@ const Community = () => {
   const { getToken } = useAuth()
   const { theme } = useTheme()
 
-  const fetchCreations = async () => {
+  const fetchCreations = useCallback(async () => {
     try {
-      const { data } = await axios.get('/api/user/get-published-creations', {
-        headers: { Authorization: `Bearer ${await getToken()}` }
-      })
+      const token = await getToken().catch(() => null)
+      const headers = token ? { Authorization: `Bearer ${token}` } : {}
+      const { data } = await axios.get('/api/user/get-published-creations', { headers })
       if (data.success) {
-        setCreations(data.creations)
+        setCreations(data.creations || [])
       } else {
-        toast.error(data.message)
+        toast.error(data.message || "Failed to load creations")
       }
     } catch (error) {
       toast.error(error.response?.data?.message || error.message)
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
-  }
+  }, [getToken])
 
   const imageLikeToggle = async (id) => {
+    if (!user) {
+      return toast.error("Please log in to like creations")
+    }
+
     try {
+      const token = await getToken().catch(() => null)
       const { data } = await axios.post('/api/user/toggle-like-creation', { id }, {
-        headers: { Authorization: `Bearer ${await getToken()}` }
+        headers: { Authorization: `Bearer ${token}` }
       })
 
       if (data.success) {
@@ -48,55 +54,72 @@ const Community = () => {
   }
 
   useEffect(() => {
-    if (user) {
-      fetchCreations()
-    }
-  }, [user])
+    fetchCreations()
+  }, [fetchCreations])
 
   return !loading ? (
     <div className={`flex-1 h-full flex flex-col gap-4 p-6 ${
       theme === 'dark' ? 'text-white' : 'text-gray-900'
     }`}>
-      <h1 className='text-xl font-semibold'>Community Creations</h1>
+      <div className="flex items-center justify-between">
+        <h1 className='text-xl font-semibold'>Community Showcase</h1>
+        <span className={`text-xs px-2.5 py-1 rounded-full ${
+          theme === 'dark' ? 'bg-zinc-800 text-zinc-400' : 'bg-gray-200 text-gray-700'
+        }`}>
+          {creations.length} shared creations
+        </span>
+      </div>
+
       <div className={`h-full w-full rounded-xl overflow-y-auto ${
         theme === 'dark' ? 'bg-zinc-950' : 'bg-gray-100'
       }`}>
-        <div className='columns-1 sm:columns-2 lg:columns-3 gap-4 p-4'>
-          {creations.map((creation, index) => (
-            <div key={index} className='relative group mb-4 break-inside-avoid'>
-              <img 
-                src={creation.content} 
-                alt="" 
-                className='w-full h-auto rounded-lg object-cover transition-transform duration-300 group-hover:scale-[1.02]' 
-              />
+        {creations.length === 0 ? (
+          <div className="h-64 flex flex-col items-center justify-center text-center p-6 space-y-2">
+            <Sparkles className="w-8 h-8 text-blue-500 opacity-60" />
+            <p className="font-medium text-sm">No community creations yet</p>
+            <p className="text-xs text-zinc-500">Create an image or article and toggle &apos;Publish to Community&apos; to share it here!</p>
+          </div>
+        ) : (
+          <div className='columns-1 sm:columns-2 lg:columns-3 gap-4 p-4'>
+            {creations.map((creation, index) => {
+              const safeLikes = Array.isArray(creation.likes) ? creation.likes : []
+              const isLiked = Boolean(user?.id && safeLikes.includes(user.id))
+              const isImage = creation.type === 'image' || (typeof creation.content === 'string' && creation.content.startsWith('http'))
 
-              <div className={`absolute inset-0 flex flex-col justify-end p-3 rounded-lg ${
-                theme === 'dark'
-                  ? 'group-hover:bg-gradient-to-b from-transparent to-black/80'
-                  : 'group-hover:bg-gradient-to-b from-transparent to-gray-900/80'
-              }`}>
-                <p className={`text-sm hidden group-hover:block mb-2 ${
-                  theme === 'dark' ? 'text-white' : 'text-gray-100'
-                }`}>{creation.prompt}</p>
-                <div className='flex gap-1 items-center justify-end group-hover:justify-between'>
-                  <p className={`text-sm ${
-                    theme === 'dark' ? 'text-white' : 'text-gray-100'
-                  }`}>{creation.likes.length}</p>
-                  <Heart 
-                    onClick={() => imageLikeToggle(creation.id)} 
-                    className={`min-w-5 h-5 hover:scale-110 cursor-pointer transition-transform ${
-                      creation.likes.includes(user.id) 
-                        ? 'fill-red-500 text-red-600' 
-                        : theme === 'dark' 
-                          ? 'text-white' 
-                          : 'text-gray-100'
-                    }`}
-                  />
+              return (
+                <div key={creation.id || index} className='relative group mb-4 break-inside-avoid rounded-xl overflow-hidden border border-zinc-800 bg-zinc-900'>
+                  {isImage ? (
+                    <img 
+                      src={creation.content} 
+                      alt={creation.prompt || "AI Creation"} 
+                      className='w-full h-auto object-cover transition-transform duration-300 group-hover:scale-[1.02]' 
+                    />
+                  ) : (
+                    <div className="p-4 text-xs leading-relaxed max-h-48 overflow-hidden text-zinc-300">
+                      <p className="font-semibold text-blue-400 mb-2 capitalize">{creation.type?.replace('-', ' ')}</p>
+                      <p className="line-clamp-6">{creation.content}</p>
+                    </div>
+                  )}
+
+                  <div className={`p-3 bg-gradient-to-t from-black/90 via-black/50 to-transparent ${
+                    isImage ? 'absolute inset-0 flex flex-col justify-end' : 'border-t border-zinc-800'
+                  }`}>
+                    <p className='text-xs text-zinc-200 line-clamp-2 mb-2 font-medium'>{creation.prompt}</p>
+                    <div className='flex gap-2 items-center justify-between'>
+                      <span className='text-xs text-zinc-400 font-mono'>{safeLikes.length} {safeLikes.length === 1 ? 'like' : 'likes'}</span>
+                      <Heart 
+                        onClick={() => imageLikeToggle(creation.id)} 
+                        className={`w-4 h-4 cursor-pointer transition-transform hover:scale-125 ${
+                          isLiked ? 'fill-red-500 text-red-500' : 'text-zinc-400 hover:text-white'
+                        }`}
+                      />
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          ))}
-        </div>
+              )
+            })}
+          </div>
+        )}
       </div>
     </div>
   ) : (

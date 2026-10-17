@@ -18,7 +18,13 @@ export const getUserCreations = async (req, res) => {
             console.warn("DB creations note:", err.message);
             return [];
         });
-        res.json({ success: true, creations: creations || [] });
+
+        const safeCreations = (creations || []).map(c => ({
+            ...c,
+            likes: Array.isArray(c.likes) ? c.likes : []
+        }));
+
+        res.json({ success: true, creations: safeCreations });
     } catch (error) {
         console.warn("getUserCreations note:", error.message);
         res.json({ success: true, creations: [] });
@@ -33,7 +39,13 @@ export const getPublishedCreations = async (req, res) => {
             console.warn("DB published note:", err.message);
             return [];
         });
-        res.json({ success: true, creations: creations || [] });
+
+        const safeCreations = (creations || []).map(c => ({
+            ...c,
+            likes: Array.isArray(c.likes) ? c.likes : []
+        }));
+
+        res.json({ success: true, creations: safeCreations });
     } catch (error) {
         console.warn("getPublishedCreations note:", error.message);
         res.json({ success: true, creations: [] });

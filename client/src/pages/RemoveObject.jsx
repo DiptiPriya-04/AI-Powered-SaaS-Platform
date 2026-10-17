@@ -1,4 +1,4 @@
-﻿import { Scissors, Sparkles, Download, X } from 'lucide-react';
+import { Scissors, Sparkles, Download, X } from 'lucide-react';
 import React, { useState, useRef } from 'react'
 import axios from 'axios'
 import { useAuth } from '@clerk/clerk-react';
@@ -89,19 +89,32 @@ const RemoveObject = () => {
     
     try {
       setDownloading(true);
-      const response = await fetch(content);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `object-removed-${Date.now()}.png`;
-      document.body.appendChild(link);
-      link.click();
-      
-      // Clean up
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(link);
+      try {
+        const response = await fetch(content);
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `object-removed-${Date.now()}.png`;
+        document.body.appendChild(link);
+        link.click();
+        
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(link);
+        toast.success('Image downloaded successfully!');
+      } catch (corsErr) {
+        console.debug('Direct blob download failed, falling back:', corsErr);
+        const link = document.createElement('a');
+        link.href = content;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.download = `object-removed-${Date.now()}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast.success('Image opened for download!');
+      }
     } catch (error) {
       toast.error('Failed to download image');
       console.error('Download error:', error);

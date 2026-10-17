@@ -8,10 +8,22 @@ import { useTheme } from '../context/ThemeContext'
 const Layout = () => {
   const navigate = useNavigate()
   const [sidebar, setSidebar] = useState(false)
-  const { user } = useUser()
+  const { isLoaded, isSignedIn, user } = useUser()
   const { theme } = useTheme()
 
-  return user ? (
+  if (!isLoaded) {
+    return (
+      <div className={`fixed inset-0 flex items-center justify-center ${
+        theme === 'dark' ? 'bg-zinc-950' : 'bg-white'
+      }`}>
+        <div className={`w-10 h-10 border-4 rounded-full animate-spin ${
+          theme === 'dark' ? 'border-[#4f6cff] border-t-transparent' : 'border-blue-600 border-t-transparent'
+        }`}></div>
+      </div>
+    )
+  }
+
+  return (isSignedIn && user) ? (
     <div className={`fixed inset-0 flex flex-col overflow-hidden ${
       theme === 'dark' ? 'bg-zinc-950' : 'bg-white'
     }`}>

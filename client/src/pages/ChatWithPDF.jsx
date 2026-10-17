@@ -81,13 +81,47 @@ const ChatWithPDF = () => {
     }
   };
 
+  const loadHistory = React.useCallback(async (fileName) => {
+    try {
+      setHistoryLoading(true);
+      
+      const cachedConv = localStorage.getItem(`pdfChat_conv_${fileName}`);
+      
+      if (cachedConv) {
+        setConversation(JSON.parse(cachedConv));
+        setSelectedFile(fileName);
+      }
+      const token = await getToken().catch(() => null);
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const { data } = await axios.get(
+        `/api/ai/pdf-chat-history?file_name=${encodeURIComponent(fileName)}`,
+        { headers }
+      );
+      
+      if (data.success) {
+        setConversation(data.chatHistory || []);
+        setSelectedFile(fileName);
+        localStorage.setItem(
+          `pdfChat_conv_${fileName}`,
+          JSON.stringify(data.chatHistory || [])
+        );
+      }
+    } catch {
+      toast.error('Failed to load chat history');
+      setChatHistory(prev => prev.filter(item => item.fileName !== fileName));
+    } finally {
+      setHistoryLoading(false);
+      setShowSidebar(false);
+    }
+  }, [getToken]);
+
   // Fetch initial data
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        const { data } = await axios.get('/api/ai/pdf-chat-history', {
-          headers: { Authorization: `Bearer ${await getToken()}` }
-        });
+        const token = await getToken().catch(() => null);
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        const { data } = await axios.get('/api/ai/pdf-chat-history', { headers });
         
         if (!data.success) {
           throw new Error(data.message || 'Failed to load history');
@@ -100,7 +134,7 @@ const ChatWithPDF = () => {
           let savedFile = null;
           try {
             savedFile = rawSavedFile ? JSON.parse(rawSavedFile) : null;
-          } catch (e) {
+          } catch {
             savedFile = rawSavedFile;
           }
           if (savedFile && data.files.includes(savedFile)) {
@@ -116,47 +150,14 @@ const ChatWithPDF = () => {
         }
       } catch (error) {
         console.error('Initial data load error:', error);
-        toast.error(error.response?.data?.message || 'Failed to load initial data');
       }
     };
     fetchInitialData();
-  }, [getToken]);
-
-  const loadHistory = async (fileName) => {
-    try {
-      setHistoryLoading(true);
-      
-      const cachedConv = localStorage.getItem(`pdfChat_conv_${fileName}`);
-      
-      if (cachedConv) {
-        setConversation(JSON.parse(cachedConv));
-        setSelectedFile(fileName);
-      }
-      const { data } = await axios.get(
-        `/api/ai/pdf-chat-history?file_name=${encodeURIComponent(fileName)}`,
-        { headers: { Authorization: `Bearer ${await getToken()}` } }
-      );
-      
-      if (data.success) {
-        setConversation(data.chatHistory);
-        setSelectedFile(fileName);
-        localStorage.setItem(
-          `pdfChat_conv_${fileName}`,
-          JSON.stringify(data.chatHistory)
-        );
-      }
-    } catch (error) {
-      toast.error('Failed to load chat history');
-      setChatHistory(prev => prev.filter(item => item.fileName !== fileName));
-    } finally {
-      setHistoryLoading(false);
-      setShowSidebar(false);
-    }
-  };
+  }, [getToken, loadHistory]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!pdfFile) {
+    if (!pdfFile && !selectedFile) {
       toast.error('Please upload a PDF file first');
       fileInputRef.current?.focus();
       return;
@@ -168,31 +169,42 @@ const ChatWithPDF = () => {
     }
 
     const formData = new FormData();
-    formData.append('pdf', pdfFile);
+    if (pdfFile) {
+      formData.append('pdf', pdfFile);
+    }
+    if (selectedFile) {
+      formData.append('fileName', selectedFile);
+    }
     formData.append('message', message.trim());
     formData.append('chatHistory', JSON.stringify(conversation));
 
     try {
       setLoading(true);
-      const { data } = await axios.post('/api/ai/chat-with-pdf', formData, {
-        headers: { 
-          Authorization: `Bearer ${await getToken()}`,
-          'Content-Type': 'multipart/form-data'
-        }
-      });
+      const token = await getToken().catch(() => null);
+      const headers = { 
+        'Content-Type': 'multipart/form-data',
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
+      };
+
+      const { data } = await axios.post('/api/ai/chat-with-pdf', formData, { headers });
 
       if (data.success) {
-        setConversation(data.chatHistory);
+        setConversation(data.chatHistory || []);
         setMessage('');
         
-        if (!chatHistory.some(item => item.fileName === pdfFile.name)) {
-          setChatHistory(prev => [...prev, { fileName: pdfFile.name }]);
+        const activeName = pdfFile ? pdfFile.name : selectedFile;
+        if (activeName && !chatHistory.some(item => item.fileName === activeName)) {
+          setChatHistory(prev => [...prev, { fileName: activeName }]);
         }
         
-        localStorage.setItem(
-          `pdfChat_conv_${pdfFile.name}`,
-          JSON.stringify(data.chatHistory)
-        );
+        if (activeName) {
+          localStorage.setItem(
+            `pdfChat_conv_${activeName}`,
+            JSON.stringify(data.chatHistory || [])
+          );
+        }
+      } else {
+        toast.error(data.message || 'Failed to process question');
       }
     } catch (error) {
       console.error('Error:', error.response?.data || error.message);

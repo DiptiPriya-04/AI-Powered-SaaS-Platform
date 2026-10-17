@@ -1,12 +1,10 @@
 import React, { useEffect, useRef } from 'react'
 import { AiToolsData } from '../assets/assets'
 import { useNavigate } from 'react-router-dom'
-import { useUser } from '@clerk/clerk-react'
 import { useTheme } from '../context/ThemeContext'
 
 const AiTools = () => {
   const navigate = useNavigate()
-  const { user } = useUser()
   const { theme } = useTheme()
   
   // Animation refs
@@ -81,7 +79,7 @@ const AiTools = () => {
         }, "-=0.2")
         
         // Enhanced but subtle card interactions
-        toolCardsRef.current.forEach((card, index) => {
+        toolCardsRef.current.forEach((card) => {
           if (card) {
             let hoverTL = gsap.timeline({ paused: true })
             

@@ -130,7 +130,7 @@ const Hero = () => {
       
       buttons.forEach((button, index) => {
         // Magnetic hover effect
-        button.addEventListener('mouseenter', (e) => {
+        button.addEventListener('mouseenter', () => {
           gsap.to(button, {
             y: -12,
             scale: 1.08,

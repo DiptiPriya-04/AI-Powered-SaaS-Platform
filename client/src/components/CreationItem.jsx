@@ -11,7 +11,7 @@ const CreationItem = ({ item }) => {
   if (item.type === 'ats-score') {
     try {
       atsData = typeof item.content === 'string' ? JSON.parse(item.content) : item.content;
-    } catch (e) {
+    } catch {
       atsData = null;
     }
   }

@@ -1,10 +1,8 @@
 import React, { useRef, useEffect } from 'react'
-import { useUser } from '@clerk/clerk-react'
 import { steps } from '../assets/assets'
 import { useTheme } from '../context/ThemeContext'
 
-const HowItWorks = () => {
-  const { user } = useUser()
+const HowItWorks = ({ id = "HowItWorks" }) => {
   const { theme } = useTheme()
   const containerRef = useRef(null)
   const titleRef = useRef(null)
@@ -66,13 +64,13 @@ const HowItWorks = () => {
     document.head.appendChild(script)
     
     return () => {
-      const scripts = document.querySelectorAll('script[src*="gsap"]')
-      scripts.forEach(script => document.head.removeChild(script))
+      // keep GSAP available for other components
     }
   }, [])
 
   return (
     <div 
+      id={id}
       ref={containerRef} 
       className={`px-4 sm:px-20 xl:px-32 relative overflow-hidden py-16 ${
         theme === 'dark' ? 'bg-zinc-950' : 'bg-white'

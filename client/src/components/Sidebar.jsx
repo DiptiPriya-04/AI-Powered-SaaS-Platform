@@ -65,11 +65,13 @@ const Sidebar = ({ sidebar, setSidebar }) => {
                     {user.fullName}
                 </h1>
                 <div className='px-6 mt-5 text-sm font-medium'>
-                    {navItems.map(({to, label, Icon, premium}) => (
+                    {navItems.map((item) => {
+                        const NavIcon = item.Icon;
+                        return (
                         <NavLink 
-                            key={to} 
-                            to={to} 
-                            end={to === '/ai'} 
+                            key={item.to} 
+                            to={item.to} 
+                            end={item.to === '/ai'} 
                             onClick={() => setSidebar(false)} 
                             className={({isActive}) => `px-3.5 py-2.5 flex items-center gap-3 rounded transition-colors ${
                                 isActive 
@@ -81,7 +83,7 @@ const Sidebar = ({ sidebar, setSidebar }) => {
                         >
                             {({ isActive }) => (
                                 <>
-                                    <Icon className={`w-4 h-4 ${
+                                    <NavIcon className={`w-4 h-4 ${
                                         isActive 
                                             ? 'text-white' 
                                             : theme === 'dark' 
@@ -95,9 +97,9 @@ const Sidebar = ({ sidebar, setSidebar }) => {
                                                 ? 'text-gray-300' 
                                                 : 'text-gray-700'
                                     }`}>
-                                        {label}
+                                        {item.label}
                                     </span>
-                                    {premium && (
+                                    {item.premium && (
                                         <span className="flex items-center gap-1 text-xs bg-gradient-to-r from-amber-500 to-amber-600 text-white px-2 py-0.5 rounded-full">
                                             <Crown className="w-2 h-3" />
                                         </span>
@@ -105,7 +107,8 @@ const Sidebar = ({ sidebar, setSidebar }) => {
                                 </>
                             )}
                         </NavLink>
-                    ))}
+                        );
+                    })}
                 </div>
             </div>
 

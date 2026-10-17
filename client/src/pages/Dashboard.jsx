@@ -19,39 +19,36 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { theme } = useTheme();
 
-  const getDashboardData = async () => {
+  const getDashboardData = React.useCallback(async () => {
     try {
       setLoading(true);
-      
+      const token = await getToken().catch(() => null);
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
       const [creationsRes, pdfChatsRes] = await Promise.all([
-        axios.get('/api/user/get-user-creations', {
-          headers: { Authorization: `Bearer ${await getToken()}` }
-        }),
-        axios.get('/api/ai/pdf-chat-history', {
-          headers: { Authorization: `Bearer ${await getToken()}` }
-        })
+        axios.get('/api/user/get-user-creations', { headers }).catch(e => ({ data: { success: false, message: e.message } })),
+        axios.get('/api/ai/pdf-chat-history', { headers }).catch(e => ({ data: { success: false, message: e.message } }))
       ]);
 
-      if (creationsRes.data.success) {
-        setCreations(creationsRes.data.creations);
-      } else {
-        toast.error(creationsRes.data.message);
+      if (creationsRes.data?.success) {
+        setCreations(creationsRes.data.creations || []);
       }
 
-      if (pdfChatsRes.data.success) {
-        const groupedChats = pdfChatsRes.data.files ? 
-          await Promise.all(pdfChatsRes.data.files.map(async fileName => {
-            const { data } = await axios.get(
-              `/api/ai/pdf-chat-history?file_name=${encodeURIComponent(fileName)}`,
-              { headers: { Authorization: `Bearer ${await getToken()}` } }
-            );
-            return {
-              type: 'pdf-chat',
-              fileName,
-              lastMessage: data.chatHistory?.[data.chatHistory.length - 1]?.content || '',
-              createdAt: new Date().toISOString()
-            };
-          })) : [];
+      if (pdfChatsRes.data?.success) {
+        const files = pdfChatsRes.data.files || [];
+        const topFiles = files.slice(0, 6);
+        const groupedChats = await Promise.all(topFiles.map(async fileName => {
+          const { data } = await axios.get(
+            `/api/ai/pdf-chat-history?file_name=${encodeURIComponent(fileName)}`,
+            { headers }
+          ).catch(() => ({ data: {} }));
+          return {
+            type: 'pdf-chat',
+            fileName,
+            lastMessage: data.chatHistory?.[data.chatHistory.length - 1]?.content || 'Chat session active',
+            createdAt: new Date().toISOString()
+          };
+        }));
         
         setPdfChats(groupedChats);
       }
@@ -61,11 +58,11 @@ const Dashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [getToken]);
 
   useEffect(() => {
     getDashboardData();
-  }, []);
+  }, [getDashboardData]);
 
   const toggleAllCreations = () => {
     setShowAllCreations(!showAllCreations);
