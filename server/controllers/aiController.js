@@ -6,6 +6,7 @@ import sql from "../configs/db.js";
 import pdfModule from "pdf-parse/lib/pdf-parse.js";
 import {
     extractCleanTopic,
+    extractCleanTitleTopic,
     generateArticleFallback,
     generateBlogTitlesFallback,
     humanizeTextFallback,
@@ -145,28 +146,15 @@ export const generateBlogTitle = async (req, res) => {
             return res.json({ success: false, message: "Please provide a topic or keyword" });
         }
 
-        // Cleanly extract topic and category
-        let cleanTopic = (keyword || "").trim();
+        // Cleanly extract topic and category, eliminating prompt noise
+        const cleanTopic = extractCleanTitleTopic(keyword, prompt);
         let cleanCategory = (category || "").trim() || "General";
-
-        if (!cleanTopic && prompt) {
-            const kwMatch = prompt.match(/keyword\s+([^.\n]+?)(?:\s+in\s+the\s+category|\s*\.|\s*$)/i);
+        if (cleanCategory === "General" && prompt) {
             const catMatch = prompt.match(/category\s+([^.\n]+?)(?:\s*\.|\s*$)/i);
-            if (kwMatch) cleanTopic = kwMatch[1].trim();
-            if (catMatch) cleanCategory = catMatch[1].trim();
-
-            if (!cleanTopic) {
-                cleanTopic = prompt
-                    .replace(/^generate\s+(atleast\s+)?(very\s+good\s+)?(10\s+)?(catchy\s+)?(blog\s+)?titles?\s+(for|about|on)?\s*/i, '')
-                    .replace(/\bin\s+the\s+category\s+.*$/i, '')
-                    .replace(/\bwithin\s+500\s+words.*$/i, '')
-                    .replace(/\bdont\s+exceed.*$/i, '')
-                    .trim();
-            }
+            if (catMatch && catMatch[1]?.trim()) cleanCategory = catMatch[1].trim();
         }
-        if (!cleanTopic) cleanTopic = "Content Strategy";
 
-        const effectivePrompt = prompt || `Generate 10 catchy blog titles for the keyword ${cleanTopic} in the category ${cleanCategory}.`;
+        const effectivePrompt = `Generate 10 catchy blog titles for the keyword ${cleanTopic} in the category ${cleanCategory}.`;
 
         const plan = req.plan || 'free';
         const free_usage = req.free_usage ?? 0;
@@ -187,7 +175,7 @@ export const generateBlogTitle = async (req, res) => {
                     model: "gemini-2.0-flash",
                     messages: [{ 
                         role: "user", 
-                        content: `Generate exactly 10 fresh, catchy, and viral blog post titles for "${cleanTopic}" in the "${cleanCategory}" category. Use diverse angles (How-To, Listicle, Contrarian, Roadmap, Expert Secrets). Formatted as a numbered list from 1 to 10 with bold titles.` 
+                        content: `Generate exactly 10 fresh, catchy, and viral blog post titles for "${cleanTopic}" in the "${cleanCategory}" category. Use diverse angles (How-To Blueprint, Viral Listicle, Contrarian Perspective, Masterclass, Expert Secrets, Costly Mistakes, Fast Wins). Format as a clean markdown numbered list from 1 to 10 with bold titles, followed by a short 1-line italicized hook describing the angle.` 
                     }],
                     temperature: 0.85,
                 });
@@ -206,7 +194,7 @@ export const generateBlogTitle = async (req, res) => {
 
         await sql`
             INSERT INTO creations(user_id, prompt, content, type)
-            VALUES (${userId}, ${prompt}, ${content}, 'blog-title')
+            VALUES (${userId}, ${`Blog Titles: ${cleanTopic} (${cleanCategory})`}, ${content}, 'blog-title')
         `.catch(e => console.warn("DB insert note:", e.message));
 
         const updatedUsage = await incrementUsage(userId, free_usage, plan);

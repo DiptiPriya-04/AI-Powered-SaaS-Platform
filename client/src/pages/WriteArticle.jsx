@@ -1,5 +1,6 @@
 import { Edit, Sparkles, Copy } from 'lucide-react'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import axios from 'axios'
 import { useAuth } from '@clerk/clerk-react';
 import toast from 'react-hot-toast';
@@ -23,6 +24,13 @@ const WriteArticle = () => {
   const { theme } = useTheme();
   const { getToken } = useAuth()
   const { openUpgradeModal, refreshPlan } = usePlan();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.state?.topic) {
+      setInput(location.state.topic);
+    }
+  }, [location.state]);
 
   const onSubmitHandler = async (e)=>{
     e.preventDefault();
