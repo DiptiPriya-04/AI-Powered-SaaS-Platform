@@ -2,24 +2,29 @@ import multer from "multer";
 
 // For generic uploads (PDFs, images, etc.)
 export const upload = multer({
-  storage: multer.memoryStorage(), // No disk writes
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
 });
 
-// For strict PDF-only uploads (e.g., chatWithPDF)
+// For strict PDF-only uploads (e.g., chatWithPDF, resumeReview, calculateATSScore)
 export const pdfUpload = multer({
   storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
   fileFilter: (req, file, cb) => {
-    if (file.mimetype === "application/pdf") cb(null, true); // Accept PDFs
-    else cb(new Error("Only PDFs allowed"), false); // Reject non-PDFs
+    const isPdf = file.mimetype === "application/pdf" || 
+                  file.mimetype === "application/x-pdf" || 
+                  (file.originalname && file.originalname.toLowerCase().endsWith(".pdf"));
+    if (isPdf) cb(null, true);
+    else cb(new Error("Only PDF documents are allowed"), false);
   },
 });
 
-// For strict image-only uploads (e.g., removeImageBackground)
+// For strict image-only uploads (e.g., removeImageBackground, removeImageObject)
 export const imageUpload = multer({
   storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
   fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith("image/")) cb(null, true); // Accept images
-    else cb(new Error("Only images allowed"), false); // Reject non-images
+    if (file.mimetype.startsWith("image/")) cb(null, true);
+    else cb(new Error("Only images are allowed"), false);
   },
 });
