@@ -2,6 +2,7 @@
 node_modules/
 dist/
 dist-ssr/
+public/
 
 # Environment variables (ignore real secrets, allow examples)
 .env
