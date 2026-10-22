@@ -25,9 +25,31 @@ body {
   --color-primary: #5044E5;
 }
 
-.reset-tw, .reset-tw *{
-  all: revert !important;
+/* Theme-safe markdown typography reset */
+.reset-tw {
+  color: inherit !important;
+  font-family: inherit !important;
 }
+.reset-tw * {
+  color: inherit;
+  font-family: inherit;
+}
+.reset-tw h1 { font-size: 1.5rem; font-weight: 700; margin-top: 1.25rem; margin-bottom: 0.75rem; color: inherit; }
+.reset-tw h2 { font-size: 1.25rem; font-weight: 600; margin-top: 1.15rem; margin-bottom: 0.5rem; color: inherit; }
+.reset-tw h3 { font-size: 1.05rem; font-weight: 600; margin-top: 1rem; margin-bottom: 0.5rem; color: inherit; }
+.reset-tw p { margin-top: 0.4rem; margin-bottom: 0.6rem; line-height: 1.6; }
+.reset-tw ul { list-style-type: disc !important; padding-left: 1.25rem !important; margin-top: 0.4rem; margin-bottom: 0.6rem; }
+.reset-tw ol { list-style-type: decimal !important; padding-left: 1.25rem !important; margin-top: 0.4rem; margin-bottom: 0.6rem; }
+.reset-tw li { margin-top: 0.2rem; margin-bottom: 0.2rem; line-height: 1.5; }
+.reset-tw strong { font-weight: 700; color: inherit; }
+.reset-tw em { font-style: italic; opacity: 0.9; }
+.reset-tw hr { border: 0; border-top: 1px solid rgba(150, 150, 150, 0.25); margin: 1rem 0; }
+.reset-tw blockquote { border-left: 3px solid #00DA83; padding: 0.5rem 0 0.5rem 1rem; font-style: italic; opacity: 0.95; margin: 0.75rem 0; background: rgba(0, 218, 131, 0.05); border-radius: 0 6px 6px 0; }
+.reset-tw code { background: rgba(120, 120, 120, 0.2); padding: 0.15rem 0.35rem; border-radius: 4px; font-size: 0.85em; font-family: monospace !important; }
+.reset-tw pre { background: rgba(20, 20, 20, 0.8); padding: 0.75rem 1rem; border-radius: 8px; overflow-x: auto; margin: 0.75rem 0; }
+.reset-tw table { width: 100%; border-collapse: collapse; margin: 0.75rem 0; font-size: 0.9rem; }
+.reset-tw th { text-align: left; padding: 0.5rem 0.75rem; border-bottom: 2px solid rgba(150, 150, 150, 0.3); font-weight: 600; }
+.reset-tw td { padding: 0.5rem 0.75rem; border-bottom: 1px solid rgba(150, 150, 150, 0.15); }
 
 .cl-drawerRoot{
   z-index: 10;

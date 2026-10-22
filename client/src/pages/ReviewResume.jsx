@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useAuth } from '@clerk/clerk-react';
 import toast from 'react-hot-toast';
 import Markdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { useTheme } from '../context/ThemeContext';
 import { usePlan } from '../context/PlanContext';
 
@@ -195,10 +196,10 @@ const ReviewResume = () => {
           </div>
         ) : (
           <div className='flex-1 overflow-y-auto pr-2'>
-            <div className={`reset-tw prose max-w-none ${
-              theme === 'dark' ? 'prose-invert' : ''
+            <div className={`reset-tw max-w-none ${
+              theme === 'dark' ? 'text-zinc-100' : 'text-zinc-900'
             }`}>
-              <Markdown>{content}</Markdown>
+              <Markdown remarkPlugins={[remarkGfm]}>{content}</Markdown>
             </div>
           </div>
         )}

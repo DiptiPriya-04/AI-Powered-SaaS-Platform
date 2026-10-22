@@ -1195,123 +1195,106 @@ export const resumeReviewFallback = async (resumeText) => {
     ];
     const detectedPassive = passivePhrases.filter(p => new RegExp(`\\b${escapeRegex(p)}\\b`, 'i').test(resumeText));
 
-    // Dynamic High Priority Improvements (Generated strictly from candidate gaps)
-    const dynamicImprovements = [];
+    // Extract actual accomplishment bullets and projects from the candidate's resume
+    const rawBullets = lines
+        .filter(l => /^[-*•]\s+/.test(l) || /^\d+\.\s+/.test(l))
+        .map(l => l.replace(/^[-*•\d.]+\s+/, '').trim())
+        .filter(l => l.length > 20 && l.length < 160);
 
-    // 1. Metrics Improvement
+    const projectMatches = [];
+    let captureProj = false;
+    for (const line of lines) {
+        if (/^(projects|technical projects|personal projects|key projects)/i.test(line)) {
+            captureProj = true;
+            continue;
+        }
+        if (captureProj) {
+            if (/^(experience|work experience|education|skills|certifications|awards|summary)/i.test(line)) break;
+            if (!/^[-*•]/.test(line) && line.length < 50 && line.length > 3) {
+                projectMatches.push(line);
+            }
+        }
+    }
+
+    // Build authentic context overview directly from candidate resume content
+    let contextOverview = `The candidate demonstrates hands-on domain competency in **${targetDomain}**, with practical proficiency in ${detected.languages.slice(0, 3).join(', ') || 'modern languages'}${detected.frameworks.length > 0 ? ` and ${detected.frameworks.slice(0, 3).join(', ')}` : ''}.`;
+    if (projectMatches.length > 0) {
+        contextOverview += ` Notable featured project work includes *${projectMatches.slice(0, 2).join(' and ')}*.`;
+    } else if (rawBullets.length > 0) {
+        const sampleBullet = rawBullets[0].replace(/\.$/, '');
+        contextOverview += ` Experience highlights include demonstrable work in *"${sampleBullet}"*.`;
+    }
+
+    // Generate exactly 2-3 High-Priority Actionable Recommendations
+    const dynamicRecommendations = [];
+
+    // Rec 1: Metrics & Business Impact
     if (!isWellQuantified) {
         if (domainType === "frontend") {
-            dynamicImprovements.push(`- **Quantify User Experience & Performance Impact:** Replace broad task descriptions with measurable client-side metrics—e.g., *"Engineered responsive interfaces reducing load time by 35% across 20,000+ monthly active users"* or *"Improved Core Web Vitals (LCP/CLS) to 95+ score"*`);
+            dynamicRecommendations.push(`**Quantify User Experience & Speed Impact:** Transform descriptive tasks into measurable benchmarks—e.g., *"Engineered responsive interfaces reducing load time by 35% across 20k+ active users"* or *"Improved Core Web Vitals to 95+ score"* to prove immediate client-side value.`);
         } else if (domainType === "backend") {
-            dynamicImprovements.push(`- **Add Measurable Throughput & Latency Figures:** Transition operational descriptions into quantifiable engineering accomplishments—e.g., *"Optimized SQL query execution and indexing, reducing P99 latency by 42% under 10,000 QPS"* or *"Automated message queue processing to handle 2.5M daily events"*`);
+            dynamicRecommendations.push(`**Add Throughput & Latency Figures:** Convert backend responsibilities into quantifiable metrics—e.g., *"Optimized SQL query execution reducing P99 latency by 42% under 10,000 QPS"* or *"Automated queue processing handling 2M+ daily events"*`);
         } else if (domainType === "data") {
-            dynamicImprovements.push(`- **Highlight Model Performance & Business ROI:** Quantify your model evaluation metrics and data throughput—such as *"Trained predictive classifiers achieving 94.2% precision and $120k in operational cost reductions"* or *"Processed 5TB+ streaming pipelines using Apache Spark"*`);
+            dynamicRecommendations.push(`**Highlight Model Accuracy & Business ROI:** Quantify your data pipelines and model evaluations—e.g., *"Trained predictive classifiers achieving 94% precision and $120k cost savings"* or *"Processed 5TB+ streaming pipelines using Spark"*`);
         } else if (domainType === "devops") {
-            dynamicImprovements.push(`- **Quantify Uptime & CI/CD Deployment Velocity:** Showcase infrastructure impact with hard data—such as *"Constructed multi-region Kubernetes clusters achieving 99.98% service availability and accelerating deployment frequency from weekly to 4x daily"*`);
+            dynamicRecommendations.push(`**Showcase Uptime & Deployment Velocity:** Ground infrastructure work in concrete numbers—e.g., *"Constructed Kubernetes clusters maintaining 99.98% service availability and accelerating deployment cadence by 3x"*`);
         } else {
-            dynamicImprovements.push(`- **Anchor Achievements in Quantifiable Metrics:** Currently, several bullet points describe responsibilities rather than measurable business outcomes. Incorporate specific indicators (percentages, scale, hours saved, or efficiency gains) to give recruiters tangible evidence of your contribution.`);
+            dynamicRecommendations.push(`**Incorporate Measurable Business Metrics:** Replace general duty bullets with specific numbers (percentages, scale, hours saved, or user numbers) so recruiters immediately see tangible evidence of your contributions.`);
         }
     } else {
-        dynamicImprovements.push(`- **Highlight Business Context for Existing Metrics:** Your resume already demonstrates good quantification (${validMetrics.slice(0, 3).join(', ')}). Elevate this further by explicitly stating the broader business impact behind those metrics (e.g., how the efficiency gain impacted team velocity, reduced cloud expenditure, or retained revenue).`);
+        dynamicRecommendations.push(`**Connect Metrics to Business Outcomes:** Your resume shows solid quantification (${validMetrics.slice(0, 3).join(', ')}). Elevate this further by explicitly tying those engineering metrics to direct business outcomes (e.g. cloud cost reductions or improved team shipping velocity).`);
     }
 
-    // 2. Action Verb Polish
+    // Rec 2: Action Verbs & Power Phrasing
     if (detectedPassive.length > 0) {
-        const quotedPassive = detectedPassive.map(p => `*"${p}"*`).join(', ');
-        dynamicImprovements.push(`- **Eliminate Passive Action Verbs:** We detected passive duty phrases such as ${quotedPassive}. Replace these immediately with authoritative power verbs: instead of *"worked on APIs"*, use *"Architected and deployed fault-tolerant REST APIs"*; instead of *"responsible for testing"*, use *"Pioneered automated testing suite expanding coverage to 85%"*`);
+        const quotedPassive = detectedPassive.slice(0, 3).map(p => `*"${p}"*`).join(', ');
+        dynamicRecommendations.push(`**Upgrade Passive Duty Phrasing:** We detected passive phrasing (${quotedPassive}). Replace them with decisive power verbs: instead of *"worked on"* or *"assisted in"*, use *"Architected"*, *"Pioneered"*, *"Engineered"*, or *"Optimized"* to demonstrate technical ownership.`);
     } else {
-        dynamicImprovements.push(`- **Strengthen Bullet Point Formula (Action + Context + Result):** Ensure every bullet follows the Google X-Y-Z formula: *"Accomplished [X], as measured by [Y], by doing [Z]"*. This guarantees recruiters absorb your strategic thinking within the initial 6-second scan.`);
+        dynamicRecommendations.push(`**Apply the Google X-Y-Z Formula:** Format each bullet as: *"Accomplished [X], as measured by [Y], by doing [Z]"* to guarantee recruiters absorb your strategic impact in under 6 seconds.`);
     }
 
-    // 3. Technical Depth & Skill Grouping
-    if (allSkills.length > 7) {
-        dynamicImprovements.push(`- **Categorize Technical Skills to Optimize ATS Parsing:** You have an impressive repertoire of technologies (${allSkills.length} identified). Rather than a single comma-separated block, organize them into dedicated sub-groups: **Languages** (${detected.languages.slice(0, 4).join(', ') || 'Core languages'}), **Frameworks** (${detected.frameworks.slice(0, 4).join(', ') || 'Modern frameworks'}), and **Cloud/Infrastructure** (${detected.cloudTools.slice(0, 4).join(', ') || 'DevOps tools'}). This helps automated ATS scanners parse your proficiencies without token truncation.`);
-    } else {
-        dynamicImprovements.push(`- **Expand Core Domain Stack Keywords:** To boost discoverability against modern ATS screening filters, explicitly state complementary modern libraries, testing frameworks, and cloud deployment pipelines associated with ${targetDomain}.`);
-    }
-
-    // 4. Header & Digital Footprint
+    // Rec 3: Digital Proof / Links
     if (!hasLinkedIn || !hasGitHub) {
-        const missingLinks = [];
-        if (!hasLinkedIn) missingLinks.push("LinkedIn profile (customized URL)");
-        if (!hasGitHub && (domainType === "frontend" || domainType === "backend" || domainType === "fullstack" || domainType === "data")) missingLinks.push("GitHub link with featured project repositories");
-        if (missingLinks.length > 0) {
-            dynamicImprovements.push(`- **Add Essential Professional Links:** We noticed that ${missingLinks.join(' and ')} are not clearly accessible in your resume header. Modern hiring teams view public code contributions and verified profiles as strong credibility signals.`);
-        }
+        const missing = [];
+        if (!hasLinkedIn) missing.push("customized LinkedIn profile URL");
+        if (!hasGitHub && (domainType === "frontend" || domainType === "backend" || domainType === "fullstack" || domainType === "data")) missing.push("active GitHub link showcasing featured repositories");
+        dynamicRecommendations.push(`**Add Essential Profile Links:** Make sure your ${missing.join(' and ')} ${missing.length > 1 ? 'are' : 'is'} clearly hyperlinked in your header to provide instant recruiter credibility.`);
     } else {
-        dynamicImprovements.push(`- **Incorporate Live Demos & Deployment Links:** You have your core profiles linked. Make your project bullet points stand out by including direct hyperlinks to live applications, deployed Swagger API documentation, or case study writeups.`);
+        dynamicRecommendations.push(`**Incorporate Clickable Live Project Demos:** For your top projects, add direct hyperlinks to live deployed web applications or API documentation (e.g. Swagger/Vercel) to provide undeniable proof of capability.`);
     }
 
-    // Dynamic Recruiter Recommendations (Tuned to candidate domain and level)
-    const dynamicRecruiterRecommendations = [];
-
-    // Recruiter Rec 1: Tailored to Domain
+    // Recruiter Recommendation (Domain + Seniority tailored)
+    let recruiterRec = "";
     if (domainType === "frontend") {
-        dynamicRecruiterRecommendations.push(`1. **Showcase Visual Proof & Live Demos:** Include clickable live demo links for your top 2 web projects. Frontend recruiters prioritize candidates who demonstrate clean UI responsiveness, cross-browser compatibility, and accessibility standards.`);
+        recruiterRec = `Frontend hiring managers look for verifiable visual proof within the first 6 seconds. Place clickable live demo links directly under your top projects, ensure mobile responsiveness is highlighted, and showcase Core Web Vitals optimizations to secure top-tier interview callbacks.`;
     } else if (domainType === "backend") {
-        dynamicRecruiterRecommendations.push(`1. **Detail System Architecture & Scalability:** In your top backend projects, mention database schemas, caching layers, and transaction handling. Hiring managers want to see how you reason about concurrency, data integrity, and failure recovery.`);
-    } else if (domainType === "data") {
-        dynamicRecruiterRecommendations.push(`1. **Feature End-to-End Pipeline Ownership:** Emphasize how your models transition from exploratory Jupyter notebooks into deployed, production-grade endpoints or automated ETL pipelines.`);
+        recruiterRec = `Backend recruiters prioritize candidates who can clearly articulate system architecture and scalability. In your project descriptions, explicitly mention database schemas, caching layers, and transaction handling to prove you can design reliable production services.`;
     } else if (domainType === "devops") {
-        dynamicRecruiterRecommendations.push(`1. **Highlight Infrastructure as Code (IaC) & Security:** Detail how you enforce zero-trust security policies, container orchestration, and automated rollbacks.`);
+        recruiterRec = `Cloud and DevOps hiring teams prioritize infrastructure automation and reliability engineering. Emphasize your Infrastructure as Code (Terraform) scripts, automated CI/CD rollback protocols, and zero-trust security policies to stand out in technical screening loops.`;
+    } else if (domainType === "data") {
+        recruiterRec = `AI and Data Science hiring managers want to see how your models transition from exploratory notebooks into scalable, production-deployed endpoints. Emphasize end-to-end pipeline ownership and real-world business validation.`;
     } else {
-        dynamicRecruiterRecommendations.push(`1. **Spotlight Core Deliverables:** Ensure your highest-value contributions appear in the top third of the first page, where hiring managers spend 80% of their initial review time.`);
+        recruiterRec = `Hiring managers spend an average of 6 seconds reviewing resumes. Ensure your most impressive technical deliverables and measurable accomplishments appear in the top third of the first page to maximize your interview callback rate.`;
     }
 
-    // Recruiter Rec 2: Tailored to Seniority & Layout
-    if (seniority.includes("Emerging")) {
-        dynamicRecruiterRecommendations.push(`2. **Position Academic & Personal Projects as Commercial Experience:** Structure project bullets with professional rigor: state the business problem, your exact technical stack, and user feedback or performance benchmarks rather than treating them as classroom assignments.`);
-    } else if (seniority.includes("Senior") || seniority.includes("Staff")) {
-        dynamicRecruiterRecommendations.push(`2. **Highlight Architectural Leadership, System Strategy & Mentorship:** As a senior contributor, emphasize where you influenced technical direction, drove architectural trade-offs, reduced tech debt, or mentored junior engineers.`);
-    } else {
-        dynamicRecruiterRecommendations.push(`2. **Demonstrate Independent Technical Ownership & Problem-Solving:** For mid-level roles, hiring managers look beyond task completion. Detail how you independently designed technical solutions, resolved performance bottlenecks, or introduced testing/development standards.`);
-    }
+    // Return clean, compact, and rendering-safe Markdown
+    return `## Executive Resume Critique: ${candidateName}
 
-    // Recruiter Rec 3: ATS & Format Tuning
-    dynamicRecruiterRecommendations.push(`3. **Adopt Standardized ATS Section Headers:** Ensure standard section titles are used (*"Professional Experience"*, *"Technical Skills"*, *"Projects"*, *"Education"*). Avoid creative column layouts, graphical skill bars, or text boxes, which frequently fail ATS parsing engines.`);
-
-    // Recruiter Rec 4: Tailored closing tactical action
-    if (!hasPortfolio && (domainType === "frontend" || domainType === "product")) {
-        dynamicRecruiterRecommendations.push(`4. **Add a Personal Portfolio Link:** A clean, curated 1-page portfolio immediately elevates you into the top 15% of applicant pools for design-conscious technical roles.`);
-    } else {
-        dynamicRecruiterRecommendations.push(`4. **Tailor Keywords per Job Description:** Run your resume against target job descriptions using CreationSuite's ATS Score Calculator to ensure 80%+ exact keyword concordance before submitting.`);
-    }
-
-    return `## Executive Resume Review: ${candidateName}
-
-### 1. Executive Summary & Candidate Archetype
-- **Candidate Archetype:** **${roleTitle}** (${seniority})
+### 👤 Candidate Profile & Core Context
+- **Candidate:** **${candidateName}** — **${roleTitle}** (${seniority})
 - **Primary Domain:** ${targetDomain}
-- **Core Technology Stack:** ${topSkillsString}
-
-The submitted resume demonstrates a solid professional trajectory with clear technical capabilities. The candidate possesses strong domain alignment for **${roleTitle}** roles, evidenced by demonstrable experience in ${detected.languages.slice(0, 3).join(', ') || 'core technologies'}${detected.frameworks.length > 0 ? ` and ${detected.frameworks.slice(0, 3).join(', ')}` : ''}. The overall structure communicates key competencies effectively, with high potential to secure top-tier interview callbacks upon implementing targeted impact-driven refinements.
-
----
-
-### 2. Standout Strengths & Verified Qualifications
-- **Domain Technical Repertoire:** Identifiable hands-on proficiency across ${allSkills.length > 0 ? `${allSkills.length} key modern technologies (${topSkillsString})` : 'core engineering proficiencies'}.
-- **Clear Professional Categorization:** Distinct separation of technical skills, project portfolios, and professional background.
-${detected.cloudTools.length > 0 ? `- **Cloud & Tooling Competency:** Demonstrated experience with industry-standard development workflows (${detected.cloudTools.slice(0, 4).join(', ')}).\n` : ''}${hasLinkedIn || hasGitHub ? `- **Professional Footprint:** Inclusion of active professional handles (${hasLinkedIn ? 'LinkedIn' : ''}${hasLinkedIn && hasGitHub ? ', ' : ''}${hasGitHub ? 'GitHub' : ''}) demonstrating transparency and engineering accountability.\n` : ''}- **Role Alignment:** Experience descriptions correlate closely with contemporary expectations for ${seniority.toLowerCase()} in ${targetDomain}.
+- **Verified Tech Stack:** ${topSkillsString}
+- **Resume Overview:** ${contextOverview}
 
 ---
 
-### 3. High-Priority Improvements
-${dynamicImprovements.join('\n\n')}
+### ⚡ High-Priority Improvements (Key Recommendations)
+${dynamicRecommendations.slice(0, 3).map((rec, i) => `${i + 1}. ${rec}`).join('\n\n')}
 
 ---
 
-### 4. Recruiter Recommendations
-${dynamicRecruiterRecommendations.join('\n\n')}
-
----
-
-### 5. Talent Evaluator Scorecard
-| Assessment Criteria | Score | Recruiter Assessment |
-| :--- | :---: | :--- |
-| **Technical Stack Alignment** | **${Math.min(75 + allSkills.length * 2, 95)}/100** | Strong alignment with modern ${targetDomain} hiring criteria. |
-| **Quantification & Impact** | **${isWellQuantified ? '88' : '62'}/100** | ${isWellQuantified ? 'Strong metric presence throughout project achievements.' : 'Needs transition from task lists to measurable business metrics.'} |
-| **ATS Parsing & Structure** | **85/100** | Clean, readable hierarchy with standard terminology. |
-| **Overall Competitiveness** | **${isWellQuantified ? '86' : '74'}/100** | Competitive profile; implementing recommended tweaks unlocks top 10% callback rates. |`;
+### 🎯 Recruiter Recommendation
+> "${recruiterRec}"`;
 };
 
 // ==================== 5. DYNAMIC ATS SCORE CALCULATOR ====================
