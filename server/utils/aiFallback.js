@@ -1009,27 +1009,7 @@ export const generateBlogTitlesFallback = async (prompt, extractedTopic, extract
     const cat = (extractedCategory || "").trim() || "General";
     const t = topic.charAt(0).toUpperCase() + topic.slice(1);
 
-    // 2. Try real generative LLM with tight 2.5s timeout (never hang or freeze)
-    const creativeAngles = [
-        "Include bold curiosity hooks, viral listicle angles, and contrarian perspectives.",
-        "Emphasize step-by-step masterclasses, actionable roadmaps, and high-ROI strategies.",
-        "Focus on myth-busting, hidden traps to avoid, and industry insider secrets.",
-        "Highlight future trends, breakthrough workflows, and psychological triggers."
-    ];
-    const chosenAngle = creativeAngles[Math.floor(Math.random() * creativeAngles.length)];
-
-    const llmPrompt = `Act as an elite copywriter and viral growth editor.
-Generate exactly 10 fresh, irresistible, high-converting blog post titles for the topic "${t}" in the category "${cat}".
-${chosenAngle}
-Format strictly as a clean numbered list from 1 to 10 with bold titles, followed by a short 1-line italicized hook describing the angle.
-Make every single title unique, dynamic, and non-generic.`;
-
-    const liveTitles = await callFreeLLM(llmPrompt, 2500);
-    if (liveTitles && liveTitles.length > 120 && !liveTitles.startsWith('{') && !liveTitles.includes('error')) {
-        return liveTitles;
-    }
-
-    // 3. Fallback to our rich domain and category-aware title generator
+    // 2. Return our rich, diverse, domain-aware dynamic generator instantly (<5ms)
     return generateDynamicTitlesOffline(t, cat);
 };
 

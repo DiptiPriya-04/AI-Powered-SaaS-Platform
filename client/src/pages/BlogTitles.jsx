@@ -4,6 +4,7 @@ import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import Markdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import axios from 'axios';
 import { useTheme } from '../context/ThemeContext';
 import { usePlan } from '../context/PlanContext';
@@ -50,7 +51,7 @@ const BlogTitles = () => {
 
       const { data } = await axios.post(
         '/api/ai/generate-blog-title',
-        { prompt, keyword: input.trim(), category: selectedCategory },
+        { prompt, keyword: input.trim(), category: selectedCategory, seed: Date.now() },
         { headers: { Authorization: `Bearer ${await getToken()}` } }
       );
 
@@ -122,13 +123,18 @@ const BlogTitles = () => {
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim();
-      const numMatch = line.match(/^(\d+)\.\s+(.*)$/);
-      if (numMatch) {
+      if (!line) continue;
+
+      // Matches: 1. Title, 1) Title, ## 1. Title, - Title, * Title, etc.
+      const numMatch = line.match(/^(?:#{1,4}\s*)?(?:(\d+)[\.\)]|[-*•])\s+(.*)$/);
+      if (numMatch && !line.startsWith('### 10')) {
         if (current) items.push(current);
-        const rawTitle = numMatch[2].replace(/^\*\*|\*\*$/g, '').trim();
+        let rawTitle = numMatch[2].trim();
+        // Remove markdown bold / italics from title
+        rawTitle = rawTitle.replace(/^\*\*|\*\*$/g, '').replace(/^[*_]+|[*_]+$/g, '').trim();
         const index = items.length;
         current = {
-          number: parseInt(numMatch[1]),
+          number: numMatch[1] ? parseInt(numMatch[1]) : (items.length + 1),
           title: rawTitle,
           hook: '',
           angle: angleTags[index % angleTags.length]
@@ -460,10 +466,10 @@ const BlogTitles = () => {
         ) : (
           /* Raw Markdown View / Fallback */
           <div className='flex-1 overflow-y-auto pr-2'>
-            <div className={`reset-tw prose max-w-none ${
-              theme === 'dark' ? 'prose-invert' : ''
+            <div className={`reset-tw max-w-none ${
+              theme === 'dark' ? 'text-zinc-100' : 'text-zinc-900'
             }`}>
-              <Markdown>{content}</Markdown>
+              <Markdown remarkPlugins={[remarkGfm]}>{content}</Markdown>
             </div>
           </div>
         )}
