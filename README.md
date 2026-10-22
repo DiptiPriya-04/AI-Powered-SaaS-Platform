@@ -1,4 +1,4 @@
-# 🚀 AI-Powered SaaS Platform (CreationSuite.ai)
+# 🚀 AI-Powered SaaS Platform
 
 > **All-in-one AI Creation Suite & Productivity Platform** — Create high-quality articles, generate catchy blog titles, humanize robotic text, evaluate resumes with recruiter feedback, check job ATS compatibility, generate stunning images, remove backgrounds, erase objects, and chat with PDF documents in real-time.
 
@@ -6,7 +6,7 @@
 
 ---
 
-## 🌟 What is CreationSuite.ai? (In Plain English)
+## 🌟 What is CreationSuite.ai? 
 
 Imagine having a team of assistants available 24/7:
 - A **senior copywriter** who writes full essays and articles in seconds.
@@ -116,7 +116,7 @@ cd client && npm run dev
 ### Backend (`server/.env`):
 ```env
 PORT=3000
-DATABASE_URL=postgresql://neondb_owner:password@ep-xyz.neon.tech/neondb?sslmode=require
+DATABASE_URL=postgresql://neondb_owner:......
 CLERK_PUBLISHABLE_KEY=pk_test_...
 CLERK_SECRET_KEY=sk_test_...
 GEMINI_API_KEY=AIzaSy...
