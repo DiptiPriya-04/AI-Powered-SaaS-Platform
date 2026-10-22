@@ -23,16 +23,38 @@ const GenerateImages = () => {
 
   const onSubmitHandler = async (e)=>{
     e.preventDefault();
+    if (!input.trim()) {
+      toast.error("Please enter a description for the image");
+      return;
+    }
+
     try {
       setLoading(true)
 
-      const prompt = `Generate an image of ${input} in the style ${selectedStyle}. Create a very good image plsss.`
+      const styleEnhancers = {
+        'Realistic': 'photorealistic, ultra high resolution 8k photography, cinematic lighting, sharp focus, hyper-detailed, masterpiece',
+        'Ghibli style': 'Studio Ghibli art style, anime aesthetic, painted scenery, soft lighting, vibrant colors, Hayao Miyazaki aesthetic, beautiful atmosphere',
+        'Anime style': 'high quality anime illustration, Makoto Shinkai style, vibrant colors, detailed line art, dynamic lighting, masterpiece',
+        'Cartoon style': 'modern cartoon 2D character art, Pixar style vector illustration, bold clean outlines, vibrant colors',
+        'Fantasy style': 'epic fantasy digital painting, magical atmosphere, glowing mystical lighting, ArtStation trending, intricate details',
+        'Realistic style': 'hyper-realistic portrait photography, shallow depth of field, 8k resolution, photorealism',
+        '3D style': 'Pixar 3D animated character render, octane 3D render, smooth subsurface scattering, Unreal Engine 5 aesthetic',
+        'Portrait style': 'professional studio portrait, 85mm lens, soft lighting, sharp focus on subject, aesthetic photography'
+      };
 
-      const { data } = await axios.post('/api/ai/generate-image', {prompt, publish}, {headers: {Authorization: `Bearer ${await getToken()}`}})
+      const cleanInput = input.trim();
+      const styleDesc = styleEnhancers[selectedStyle] || selectedStyle;
+      const enrichedPrompt = `${cleanInput}, ${styleDesc}`;
+
+      const { data } = await axios.post(
+        '/api/ai/generate-image', 
+        { prompt: enrichedPrompt, rawPrompt: cleanInput, style: selectedStyle, publish }, 
+        { headers: { Authorization: `Bearer ${await getToken()}` } }
+      );
 
       if (data.success) {
         setContent(data.content)
-        toast.success("Image Generated")
+        toast.success("Image generated successfully!")
         refreshPlan?.().catch(() => {})
       }else{
         toast.error(data.message)

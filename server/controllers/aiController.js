@@ -310,11 +310,23 @@ export const generateImage = async (req, res) => {
 
         let secure_url = "";
 
+        // Clean prompt of any conversational noise or artifacts
+        let cleanPrompt = (prompt || "")
+            .replace(/^generate\s+(?:an?\s+)?image\s+(?:of\s+)?/i, "")
+            .replace(/\bcreate\s+a\s+very\s+good\s+image\b/gi, "")
+            .replace(/\bplsss?\b/gi, "")
+            .replace(/\s+/g, " ")
+            .trim();
+
+        if (!cleanPrompt) {
+            cleanPrompt = (req.body.rawPrompt || prompt || "beautiful scenic digital artwork").trim();
+        }
+
         // If user configured Clipdrop API key, try Clipdrop
         if (process.env.CLIPDROP_API_KEY && !process.env.CLIPDROP_API_KEY.includes('your_')) {
             try {
                 const formData = new FormData();
-                formData.append('prompt', prompt);
+                formData.append('prompt', cleanPrompt);
 
                 const { data } = await axios.post(
                     "https://clipdrop-api.co/text-to-image/v1",
@@ -332,11 +344,11 @@ export const generateImage = async (req, res) => {
                 secure_url = uploadResponse.secure_url;
             } catch (err) {
                 console.warn("Clipdrop generation note:", err.message);
-                secure_url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1024&height=1024&nologo=true&seed=${Date.now()}`;
+                secure_url = `https://image.pollinations.ai/prompt/${encodeURIComponent(cleanPrompt)}?model=sana&width=1024&height=1024&nologo=true&seed=${Date.now()}`;
             }
         } else {
-            // Free high-speed AI image generation fallback (Pollinations AI)
-            secure_url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1024&height=1024&nologo=true&seed=${Date.now()}`;
+            // Free high-speed AI image generation (Pollinations AI with Sana model)
+            secure_url = `https://image.pollinations.ai/prompt/${encodeURIComponent(cleanPrompt)}?model=sana&width=1024&height=1024&nologo=true&seed=${Date.now()}`;
         }
 
         await sql`
@@ -472,7 +484,7 @@ export const removeImageObject = async (req, res) => {
             });
 
             imageUrl = cloudinary.url(public_id, {
-                transformation: [{ effect: `gen_remove:${object.trim()}` }],
+                transformation: [{ effect: `gen_remove:prompt_${encodeURIComponent(object.trim())}` }],
                 resource_type: 'image'
             });
         } catch (cloudErr) {

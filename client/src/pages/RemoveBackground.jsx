@@ -1,10 +1,11 @@
-import { Eraser, Sparkles, Download, X } from 'lucide-react';
+import { Eraser, Sparkles, Download, X, Eye, EyeOff } from 'lucide-react';
 import React, { useState, useRef } from 'react'
 import axios from 'axios'
 import { useAuth } from '@clerk/clerk-react';
 import toast from 'react-hot-toast';
 import { useTheme } from '../context/ThemeContext';
 import { usePlan } from '../context/PlanContext';
+import { removeBackground } from '@imgly/background-removal';
 
 axios.defaults.baseURL = import.meta.env.VITE_BASE_URL;
 
@@ -12,7 +13,10 @@ const RemoveBackground = () => {
   const [input, setInput] = useState(null)
   const [preview, setPreview] = useState('')
   const [loading, setLoading] = useState(false)
+  const [statusMessage, setStatusMessage] = useState('')
   const [content, setContent] = useState('')
+  const [blobResult, setBlobResult] = useState(null)
+  const [showOriginal, setShowOriginal] = useState(false)
   const [downloading, setDownloading] = useState(false)
   const fileInputRef = useRef(null)
   const { theme } = useTheme();
@@ -24,6 +28,8 @@ const RemoveBackground = () => {
     if (!file) return
     
     setInput(file)
+    setContent('')
+    setBlobResult(null)
     
     // Create preview URL
     const reader = new FileReader()
@@ -37,65 +43,113 @@ const RemoveBackground = () => {
     setInput(null)
     setPreview('')
     setContent('')
+    setBlobResult(null)
+    setStatusMessage('')
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
   }
 
-  const onSubmitHandler = async (e)=>{
+  const onSubmitHandler = async (e) => {
     e.preventDefault();
-    if (!input) return
+    if (!input) return;
     
     try {
-      setLoading(true)
+      setLoading(true);
+      setStatusMessage("AI model initializing...");
 
-      const formData = new FormData()
-      formData.append('image', input)
+      // 1. Process with high-accuracy client-side AI model
+      let transparentBlob = null;
+      try {
+        setStatusMessage("Segmenting foreground & removing background...");
+        transparentBlob = await removeBackground(input, {
+          progress: (key, current, total) => {
+            if (total > 0) {
+              const pct = Math.round((current / total) * 100);
+              setStatusMessage(`AI removing background (${pct}%)...`);
+            }
+          }
+        });
+      } catch (clientErr) {
+        console.warn("Client AI model notice:", clientErr);
+      }
 
-      const { data } = await axios.post('/api/ai/remove-image-background',formData, {headers: {Authorization: `Bearer ${await getToken()}`}})
+      if (transparentBlob) {
+        const objectUrl = URL.createObjectURL(transparentBlob);
+        setContent(objectUrl);
+        setBlobResult(transparentBlob);
+        toast.success("Background removed successfully!");
+      }
+
+      // 2. Sync creation with backend to update quota & database
+      setStatusMessage("Saving creation to account...");
+      const formData = new FormData();
+      if (transparentBlob) {
+        formData.append('image', transparentBlob, 'background-removed.png');
+      } else {
+        formData.append('image', input);
+      }
+
+      const { data } = await axios.post(
+        '/api/ai/remove-image-background',
+        formData,
+        { headers: { Authorization: `Bearer ${await getToken()}` } }
+      );
 
       if (data.success) {
-        setContent(data.content)
-        toast.success("Background removed successfully")
-        refreshPlan?.().catch(() => {})
-      }else{
-        toast.error(data.message)
+        if (!transparentBlob && data.content) {
+          setContent(data.content);
+          toast.success("Background removed successfully!");
+        }
+        refreshPlan?.().catch(() => {});
+      } else {
+        if (!transparentBlob) {
+          toast.error(data.message || "Failed to remove background");
+        }
         if (data.message?.toLowerCase().includes("limit") || data.message?.toLowerCase().includes("upgrade") || data.message?.toLowerCase().includes("premium")) {
           openUpgradeModal();
         }
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || error.message)
+      console.error("Remove background error:", error);
+      toast.error(error.response?.data?.message || error.message || "Failed to remove background");
     } finally {
-      setLoading(false)
+      setLoading(false);
+      setStatusMessage("");
     }
-  }
+  };
 
   const downloadImage = async () => {
-    if (!content) return;
+    if (!content && !blobResult) return;
     
     try {
       setDownloading(true);
-      const response = await fetch(content);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
+      let downloadUrl = content;
+      
+      if (blobResult) {
+        downloadUrl = window.URL.createObjectURL(blobResult);
+      } else if (content.startsWith('http')) {
+        const response = await fetch(content);
+        const blob = await response.blob();
+        downloadUrl = window.URL.createObjectURL(blob);
+      }
       
       const link = document.createElement('a');
-      link.href = url;
+      link.href = downloadUrl;
       link.download = `background-removed-${Date.now()}.png`;
       document.body.appendChild(link);
       link.click();
       
-      // Clean up
-      window.URL.revokeObjectURL(url);
+      window.URL.revokeObjectURL(downloadUrl);
       document.body.removeChild(link);
+      toast.success("Transparent PNG downloaded!");
     } catch (error) {
       toast.error('Failed to download image');
       console.error('Download error:', error);
     } finally {
       setDownloading(false);
     }
-  }
+  };
 
   return (
     <div className={`h-full overflow-y-auto p-6 flex flex-col md:flex-row gap-6 ${
@@ -194,6 +248,13 @@ const RemoveBackground = () => {
             }
             Remove Background
           </button>
+
+          {loading && statusMessage && (
+            <div className="flex items-center gap-2 justify-center text-xs text-orange-400 animate-pulse pt-1">
+              <span className="w-2 h-2 rounded-full bg-orange-400 animate-ping"></span>
+              <span>{statusMessage}</span>
+            </div>
+          )}
         </div>
       </form>
 
@@ -208,28 +269,47 @@ const RemoveBackground = () => {
             <Eraser className={`w-6 h-6 ${
               theme === 'dark' ? 'text-[#FF4938]' : 'text-red-600'
             }`} />
-            <h1 className='text-xl font-semibold'>Processed Image</h1>
+            <div>
+              <h1 className='text-xl font-semibold'>Processed Image</h1>
+              {content && (
+                <p className="text-xs text-green-500 font-medium">✓ Background Isolated & Removed</p>
+              )}
+            </div>
           </div>
           {content && (
-            <button 
-              onClick={downloadImage}
-              disabled={downloading}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all ${
-                theme === 'dark' 
-                  ? 'bg-zinc-800 hover:bg-zinc-700 text-gray-300' 
-                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-              }`}
-              title="Download image"
-            >
-              {downloading ? (
-                <span className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin"></span>
-              ) : (
-                <>
-                  <Download className='w-4 h-4' />
-                  Download
-                </>
-              )}
-            </button>
+            <div className='flex items-center gap-2'>
+              <button 
+                type="button"
+                onClick={() => setShowOriginal(!showOriginal)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                  showOriginal 
+                    ? 'bg-orange-500 text-white shadow-sm' 
+                    : theme === 'dark' 
+                      ? 'bg-zinc-800 hover:bg-zinc-700 text-gray-300' 
+                      : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                }`}
+                title="Toggle between original and cutout"
+              >
+                {showOriginal ? <EyeOff className='w-3.5 h-3.5' /> : <Eye className='w-3.5 h-3.5' />}
+                {showOriginal ? 'Cutout' : 'Compare'}
+              </button>
+
+              <button 
+                onClick={downloadImage}
+                disabled={downloading}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 transition-all shadow-sm"
+                title="Download transparent cutout PNG"
+              >
+                {downloading ? (
+                  <span className="w-3.5 h-3.5 rounded-full border-2 border-white border-t-transparent animate-spin"></span>
+                ) : (
+                  <>
+                    <Download className='w-3.5 h-3.5' />
+                    Download PNG
+                  </>
+                )}
+              </button>
+            </div>
           )}
         </div>
 
@@ -243,14 +323,29 @@ const RemoveBackground = () => {
             </div>
           </div>
         ) : (
-          <div className='flex-1 flex items-center justify-center overflow-hidden'>
+          <div 
+            style={!showOriginal ? {
+              backgroundImage: theme === 'dark' 
+                ? 'linear-gradient(45deg, #18181b 25%, transparent 25%), linear-gradient(-45deg, #18181b 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #18181b 75%), linear-gradient(-45deg, transparent 75%, #18181b 75%)'
+                : 'linear-gradient(45deg, #e4e4e7 25%, transparent 25%), linear-gradient(-45deg, #e4e4e7 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #e4e4e7 75%), linear-gradient(-45deg, transparent 75%, #e4e4e7 75%)',
+              backgroundColor: theme === 'dark' ? '#27272a' : '#f4f4f5',
+              backgroundSize: '20px 20px',
+              backgroundPosition: '0 0, 0 10px, 10px -10px, -10px 0px'
+            } : {}}
+            className={`relative flex-1 flex items-center justify-center overflow-hidden rounded-lg border ${
+              theme === 'dark' ? 'border-zinc-700' : 'border-gray-200'
+            }`}
+          >
             <img 
-              src={content} 
-              alt="background removed" 
-              className={`w-full h-full object-contain max-h-[70vh] rounded-lg ${
-                theme === 'dark' ? 'border-zinc-700' : 'border-gray-200'
-              } border`}
+              src={showOriginal ? preview : content} 
+              alt={showOriginal ? "original image" : "background removed transparent image"} 
+              className="w-full h-full object-contain max-h-[70vh] rounded-lg transition-all"
             />
+            {showOriginal && (
+              <span className="absolute top-3 left-3 bg-black/70 text-white text-[11px] px-2 py-0.5 rounded font-medium backdrop-blur-sm">
+                Original Preview
+              </span>
+            )}
           </div>
         )}
       </div>
