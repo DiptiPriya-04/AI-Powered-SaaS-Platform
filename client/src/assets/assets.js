@@ -200,7 +200,7 @@ export const socialImgs = [
   {
     name: "github",
     Icon: FaGithub,
-    url: "https://github.com/DiptiPriya-04/CreationSuite.ai"
+    url: "https://github.com"
   },
   {
     name: "linkedin",

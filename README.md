@@ -87,8 +87,8 @@ Imagine having a team of assistants available 24/7:
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/DiptiPriya-04/AI-Powered-SaaS-Platform.git
-cd AI-Powered-SaaS-Platform
+git clone <repository-url>
+cd CreationSuite.ai
 ```
 
 ### 2. Install dependencies
