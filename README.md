@@ -2,8 +2,7 @@
 
 > **All-in-one AI Creation Suite & Productivity Platform** — Create high-quality articles, generate catchy blog titles, humanize robotic text, evaluate resumes with recruiter feedback, check job ATS compatibility, generate stunning images, remove backgrounds, erase objects, and chat with PDF documents in real-time.
 
-🌐 **Live Production Website:** [https://ai-powered-saas-platform-diptipriya-04s-projects.vercel.app](https://ai-powered-saas-platform-diptipriya-04s-projects.vercel.app)  
-📖 **Comprehensive Interview & Architecture Guide:** [INTERVIEW_GUIDE.md](./INTERVIEW_GUIDE.md)
+🌐 **Live Production Website:** [https://ai-powered-saas-platform-diptipriya-04s-projects.vercel.app](https://ai-powered-saas-platform-diptipriya-04s-projects.vercel.app)
 
 ---
 
@@ -134,15 +133,6 @@ VITE_BASE_URL=http://localhost:3000
 ```
 
 > **Note:** The platform includes automatic development sandboxing. Even if third-party keys are temporarily omitted in staging, fallbacks keep the application responsive and testable without runtime crashes.
-
----
-
-## 📚 Interview Preparation
-
-Preparing to present this project to an interviewer or client? Read the detailed breakdown in [INTERVIEW_GUIDE.md](./INTERVIEW_GUIDE.md) covering:
-- Real-world architectural trade-offs (streaming vs. in-memory processing).
-- How the ATS keyword scoring and resume recruiter engine are implemented under the hood.
-- High-frequency interview questions and ready-to-speak model answers for every tool.
 
 ---
 
