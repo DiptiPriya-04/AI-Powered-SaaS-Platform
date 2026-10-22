@@ -1,8 +1,13 @@
-# 🚀 AI-Powered SaaS Platform
+# 🚀 AI-Powered SaaS Platform (CreationSuite.ai)
 
-> **All-in-one AI Creation Suite & Productivity Platform** — Create high-quality articles, generate catchy blog titles, humanize robotic text, evaluate resumes with recruiter feedback, check job ATS compatibility, generate stunning images, remove backgrounds, erase objects, and chat with PDF documents in real-time.
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-CreationSuite.ai-6366f1?style=for-the-badge&logo=vercel&logoColor=white)](https://ai-powered-saas-platform-diptipriya-04s-projects.vercel.app)
+[![React 19](https://img.shields.io/badge/Frontend-React%2019%20%2B%20Vite-61dafb?style=flat-square&logo=react)](https://react.dev)
+[![Node.js](https://img.shields.io/badge/Backend-Node.js%20%2B%20Express-339933?style=flat-square&logo=node.js)](https://nodejs.org)
+[![PostgreSQL](https://img.shields.io/badge/Database-Neon%20Serverless%20Postgres-00e699?style=flat-square&logo=postgresql)](https://neon.tech)
 
-🌐 **Live Production Website:** [https://ai-powered-saas-platform-diptipriya-04s-projects.vercel.app](https://ai-powered-saas-platform-diptipriya-04s-projects.vercel.app)
+> **All-in-one AI Creation Suite & Productivity Platform** — Create high-quality articles, generate catchy blog titles, humanize robotic text, evaluate resumes with recruiter feedback, check job ATS compatibility, generate stunning images with 8 art styles, remove backgrounds with transparent cutouts, interactive brush object inpainting, and chat with PDF documents in real-time.
+
+🌐 **Live Deployed Application:** [https://ai-powered-saas-platform-diptipriya-04s-projects.vercel.app](https://ai-powered-saas-platform-diptipriya-04s-projects.vercel.app)
 
 ---
 
@@ -48,16 +53,16 @@ Imagine having a team of assistants available 24/7:
 - **Why it matters:** Most companies use automated filters. This tool ensures your resume actually makes it to a human recruiter's desk.
 
 ### 6. 🎨 AI Art & Image Generator (`/ai/generate-images`)
-- **What it does:** Describe any visual scene (e.g. *"A futuristic cyberpunk cafe in Tokyo at dusk"*), and the engine creates a high-resolution, vivid digital artwork.
-- **Why it matters:** Creates custom marketing imagery, hero banners, and social posts without paying for expensive stock photo licenses.
+- **What it does:** Describe any visual scene (e.g. *"A futuristic cyberpunk cafe in Tokyo at dusk"*) and choose from 8 curated art styles (Realistic, Studio Ghibli, Anime, 3D Pixar, Cartoon, Fantasy, Portrait). The engine synthesizes a high-resolution, vivid digital artwork instantly.
+- **Why it matters:** Creates custom marketing imagery, hero banners, and social posts without prompt refusals or paid stock photo subscriptions.
 
-### 7. 🪄 Background Eraser (`/ai/remove-background`)
-- **What it does:** Upload any photo of a person, product, or logo. The AI automatically isolates the subject and cuts away the backdrop into a crystal-clear transparent PNG.
-- **Why it matters:** Essential for e-commerce products, profile pictures, and clean presentation graphics.
+### 7. 🪄 AI Background Remover (`/ai/remove-background`)
+- **What it does:** Upload any photo of a person, product, or logo. The on-device neural network model isolates the subject and removes the backdrop into a **100% transparent PNG cutout** with an authentic checkerboard preview and side-by-side comparison.
+- **Why it matters:** Truly removes backgrounds (no identical photo fallbacks). Essential for e-commerce products, headshots, and clean presentation graphics.
 
-### 8. 🧼 Smart Object Eraser (`/ai/remove-object`)
-- **What it does:** Remove unwanted objects, text watermarks, or background distractions from images seamlessly.
-- **Why it matters:** Saves photos ruined by photobombers or unwanted logos without needing complicated Photoshop skills.
+### 8. 🧼 Smart Canvas Object Eraser & Inpainter (`/ai/remove-object`)
+- **What it does:** Interactive brush canvas where you can paint directly over unwanted photobombers, text watermarks, or blemishes. The radial inpainting algorithm reconstructs surrounding background textures to seamlessly erase the object.
+- **Why it matters:** Clean, real object removal directly in the browser—no expensive desktop graphic software needed.
 
 ### 9. 💬 Chat with PDF & Research Assistant (`/ai/chat-with-pdf`)
 - **What it does:** Upload any document (contracts, research papers, financial reports, user manuals) and ask questions in plain English.

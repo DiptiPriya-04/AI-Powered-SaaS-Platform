@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "description": "CreationSuite.ai - All-in-one AI Content & SaaS Studio",
+  "homepage": "https://ai-powered-saas-platform-diptipriya-04s-projects.vercel.app",
   "scripts": {
     "install:all": "npm install --prefix client && npm install --prefix server",
     "dev:client": "npm run dev --prefix client",
