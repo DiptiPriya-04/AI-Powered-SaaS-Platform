@@ -41,7 +41,7 @@ if (hasClerkKeys) {
     });
 }
 
-app.get('/', (req, res) => {
+app.get(['/', '/api'], (req, res) => {
     res.json({
         name: "CreationSuite.ai API",
         status: "active",
@@ -50,7 +50,9 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api/ai', aiRouter);
+app.use('/ai', aiRouter);
 app.use('/api/user', userRouter);
+app.use('/user', userRouter);
 
 // Global 404 handler
 app.use((req, res) => {
