@@ -53,7 +53,7 @@ export const PlanProvider = ({ children }) => {
   }, [isLoaded, user, refreshPlan]);
 
   // Upgrade or switch plan action
-  const upgradeToPlan = async (targetPlan = 'premium') => {
+  const upgradeToPlan = async (targetPlan = 'premium', autoClose = true) => {
     if (!user) {
       toast.error("Please sign in to upgrade your plan");
       return false;
@@ -72,7 +72,9 @@ export const PlanProvider = ({ children }) => {
         const updatedPlan = data.plan === 'premium' ? 'premium' : 'free';
         setPlan(updatedPlan);
         toast.success(data.message || "Plan updated successfully!");
-        setShowUpgradeModal(false);
+        if (autoClose) {
+          setShowUpgradeModal(false);
+        }
 
         // Reload Clerk user so publicMetadata syncs everywhere
         if (typeof user.reload === 'function') {
