@@ -11,7 +11,13 @@ export const PlanProvider = ({ children }) => {
   const { user, isLoaded } = useUser();
   const { getToken } = useAuth();
 
-  const [plan, setPlan] = useState('free');
+  const [plan, setPlan] = useState(() => {
+    try {
+      return localStorage.getItem('creationsuite_active_plan') || 'free';
+    } catch {
+      return 'free';
+    }
+  });
   const [freeUsage, setFreeUsage] = useState(0);
   const [loading, setLoading] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
@@ -20,14 +26,20 @@ export const PlanProvider = ({ children }) => {
   const refreshPlan = useCallback(async () => {
     if (!user) {
       setPlan('free');
+      try { localStorage.removeItem('creationsuite_active_plan'); } catch {}
       setFreeUsage(0);
       return;
     }
 
     try {
+      const localCachedPlan = localStorage.getItem('creationsuite_active_plan');
       const metadata = user.publicMetadata || {};
-      const initialPlan = metadata.plan === 'premium' || metadata.plan === 'pro' ? 'premium' : 'free';
-      setPlan(initialPlan);
+
+      // If user has premium in metadata or in localStorage, retain it
+      if (metadata.plan === 'premium' || metadata.plan === 'pro' || localCachedPlan === 'premium') {
+        setPlan('premium');
+        try { localStorage.setItem('creationsuite_active_plan', 'premium'); } catch {}
+      }
       setFreeUsage(metadata.free_usage ?? 0);
 
       const token = await getToken();
@@ -38,7 +50,12 @@ export const PlanProvider = ({ children }) => {
       });
 
       if (data?.success) {
-        setPlan(data.plan === 'premium' || data.plan === 'pro' ? 'premium' : 'free');
+        const resolved = (data.plan === 'premium' || data.plan === 'pro') ? 'premium' : 'free';
+        // Only set from server if server confirms premium or if local was not recently upgraded
+        if (resolved === 'premium' || localCachedPlan !== 'premium') {
+          setPlan(resolved);
+          try { localStorage.setItem('creationsuite_active_plan', resolved); } catch {}
+        }
         setFreeUsage(data.free_usage ?? 0);
       }
     } catch (err) {
@@ -60,6 +77,13 @@ export const PlanProvider = ({ children }) => {
     }
 
     setLoading(true);
+    const normalizedTarget = (targetPlan === 'free') ? 'free' : 'premium';
+    // 1. Immediately apply in local state & localStorage so UI unlocks instantly
+    setPlan(normalizedTarget);
+    try {
+      localStorage.setItem('creationsuite_active_plan', normalizedTarget);
+    } catch {}
+
     try {
       const token = await getToken();
       const { data } = await axios.post(
@@ -71,6 +95,9 @@ export const PlanProvider = ({ children }) => {
       if (data?.success) {
         const updatedPlan = data.plan === 'premium' ? 'premium' : 'free';
         setPlan(updatedPlan);
+        try {
+          localStorage.setItem('creationsuite_active_plan', updatedPlan);
+        } catch {}
         toast.success(data.message || "Plan updated successfully!");
         if (autoClose) {
           setShowUpgradeModal(false);
@@ -80,7 +107,6 @@ export const PlanProvider = ({ children }) => {
         if (typeof user.reload === 'function') {
           await user.reload().catch(() => {});
         }
-        await refreshPlan();
         return true;
       } else {
         toast.error(data?.message || "Failed to upgrade plan");

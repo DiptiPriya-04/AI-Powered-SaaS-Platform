@@ -1,5 +1,6 @@
 import sql from "../configs/db.js";
 import { clerkClient, getAuth } from "@clerk/express";
+import { setUserPlan, getUserPlan } from "../utils/planManager.js";
 
 const getRequestUserId = (req) => {
     if (req.userId && req.userId !== "dev_user_sandbox") return req.userId;
@@ -104,19 +105,20 @@ export const getUserData = async (req, res) => {
             return res.status(401).json({ success: false, message: "Unauthorized" });
         }
 
-        let userPlan = req.plan || 'free';
         let freeUsage = req.free_usage ?? 0;
+        let clerkMeta = null;
 
         if (process.env.CLERK_SECRET_KEY) {
             try {
                 const user = await clerkClient.users.getUser(userId);
-                const rawPlan = user.publicMetadata?.plan;
-                userPlan = (rawPlan === 'premium' || rawPlan === 'pro') ? 'premium' : 'free';
+                clerkMeta = user.publicMetadata;
                 freeUsage = user.publicMetadata?.free_usage ?? user.privateMetadata?.free_usage ?? freeUsage;
             } catch (err) {
                 console.warn("Clerk fetch note in getUserData:", err.message);
             }
         }
+
+        const userPlan = await getUserPlan(userId, clerkMeta);
 
         res.json({
             success: true,
@@ -140,6 +142,10 @@ export const updateUserPlan = async (req, res) => {
         const { plan = 'premium' } = req.body;
         const normalizedPlan = (plan === 'free') ? 'free' : 'premium';
 
+        // 1. Immediately persist to memory & Postgres DB
+        await setUserPlan(userId, normalizedPlan);
+
+        // 2. Also sync with Clerk user publicMetadata
         if (process.env.CLERK_SECRET_KEY) {
             await clerkClient.users.updateUserMetadata(userId, {
                 publicMetadata: {

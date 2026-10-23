@@ -1,4 +1,5 @@
 import { clerkClient, getAuth } from "@clerk/express";
+import { getUserPlan } from "../utils/planManager.js";
 
 // Helper to extract Bearer JWT token from Authorization header
 const extractBearerToken = (req) => {
@@ -72,20 +73,19 @@ export const auth = async (req, res, next) => {
 
         const freeUsage = user?.publicMetadata?.free_usage ?? user?.privateMetadata?.free_usage ?? 0;
         
-        // Strict plan resolution: only users who explicitly upgraded have 'premium' in metadata
-        const currentMetadataPlan = user?.publicMetadata?.plan;
-        const resolvedPlan = (currentMetadataPlan === 'premium' || currentMetadataPlan === 'pro') ? 'premium' : 'free';
+        // Multi-layer verified plan resolution: In-Memory Cache -> Postgres DB -> Clerk Metadata
+        const resolvedPlan = await getUserPlan(userId, user?.publicMetadata);
 
         req.userId = userId;
         req.plan = resolvedPlan;
         req.free_usage = freeUsage;
 
-        // Ensure newly registered users are initialized with plan: 'free' and free_usage: 0
-        if (user && (user.publicMetadata?.plan === undefined || user.publicMetadata?.free_usage === undefined)) {
+        // Ensure newly registered users are initialized with plan: 'free' only if they haven't upgraded
+        if (user && user.publicMetadata?.plan === undefined && resolvedPlan === 'free') {
             await clerkClient.users.updateUserMetadata(userId, {
                 publicMetadata: {
                     free_usage: freeUsage,
-                    plan: resolvedPlan
+                    plan: 'free'
                 },
                 privateMetadata: {
                     free_usage: freeUsage
