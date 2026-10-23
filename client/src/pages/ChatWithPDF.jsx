@@ -1,4 +1,4 @@
-import { FileText, MessageSquare, History, Send, Upload, X, Loader2, File, Trash2 } from 'lucide-react';
+import { FileText, MessageSquare, History, Send, Upload, X, Loader2, File, Trash2, Crown } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useAuth } from '@clerk/clerk-react';
@@ -10,7 +10,7 @@ import { usePlan } from '../context/PlanContext';
 axios.defaults.baseURL = import.meta.env.VITE_BASE_URL;
 
 const ChatWithPDF = () => {
-  const { openUpgradeModal, refreshPlan } = usePlan();
+  const { openUpgradeModal, refreshPlan, isPremium } = usePlan();
   const [pdfFile, setPdfFile] = useState(null);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -158,6 +158,11 @@ const ChatWithPDF = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!isPremium) {
+      toast.error("👑 Chat With PDF is a Pro feature. Please upgrade to Pro to unlock this tool.");
+      openUpgradeModal();
+      return;
+    }
     if (!pdfFile) {
       toast.error('Please upload a PDF file first');
       fileInputRef.current?.focus();
@@ -273,11 +278,16 @@ const ChatWithPDF = () => {
           theme === 'dark' ? 'bg-zinc-950 border-r border-zinc-800' : 'bg-white border-r border-gray-200'
         }`}>
           <div className="p-4">
-            <div className="flex items-center gap-3 mb-6">
-              <MessageSquare className={`w-5 h-5 ${
-                theme === 'dark' ? 'text-[#00DA83]' : 'text-green-600'
-              }`} />
-              <h1 className="text-lg font-semibold">Chat with PDF</h1>
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <MessageSquare className={`w-5 h-5 ${
+                  theme === 'dark' ? 'text-[#00DA83]' : 'text-green-600'
+                }`} />
+                <h1 className="text-lg font-semibold">Chat with PDF</h1>
+              </div>
+              <span className="flex items-center gap-1 text-xs font-bold uppercase tracking-wider bg-gradient-to-r from-amber-500 to-purple-600 text-white px-2 py-0.5 rounded-full shadow-sm">
+                <Crown className="w-2.5 h-2.5" /> PRO
+              </span>
             </div>
 
             <div className="mb-6">
@@ -418,6 +428,26 @@ const ChatWithPDF = () => {
         }`}>
           {/* Conversation display */}
           <div className="flex-1 overflow-y-auto p-4">
+            {!isPremium && (
+              <div className="mb-4 p-4 rounded-xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-purple-500/10 to-indigo-500/10 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 rounded-lg bg-amber-500/20 text-amber-400">
+                    <Crown className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-amber-400">Pro Feature Locked</p>
+                    <p className="text-xs text-zinc-400">Upgrade to CreationSuite Pro to upload documents and chat with PDFs.</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={openUpgradeModal}
+                  className="px-4 py-2 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 shadow-md transition-all cursor-pointer whitespace-nowrap"
+                >
+                  Upgrade to Pro
+                </button>
+              </div>
+            )}
             {conversation.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-center p-4">
                 <FileText className={`w-12 h-12 mb-4 ${
@@ -481,59 +511,79 @@ const ChatWithPDF = () => {
           <div className={`p-4 border-t ${
             theme === 'dark' ? 'border-zinc-800 bg-zinc-950/50' : 'border-gray-200 bg-white/50'
           } backdrop-blur-sm`}>
-            {pdfFile && (
-              <div className={`flex items-center gap-2 mb-2 text-xs ${
-                theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'
-              }`}>
-                <File className="w-3 h-3" />
-                <span className="truncate">{pdfFile.name}</span>
-                <button 
-                  onClick={removeFile}
-                  className={`ml-auto transition-colors ${
-                    theme === 'dark' ? 'text-zinc-500 hover:text-red-400' : 'text-gray-400 hover:text-red-500'
-                  }`}
-                  aria-label="Remove file"
+            {!isPremium ? (
+              <div className="p-3 rounded-lg border border-amber-500/30 bg-amber-500/10 flex flex-col sm:flex-row items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <Crown className="w-4 h-4 text-amber-400" />
+                  <span className="text-xs font-medium text-amber-300">
+                    Upgrade to Pro to chat with this and any PDF documents.
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={openUpgradeModal}
+                  className="w-full sm:w-auto px-4 py-1.5 rounded-md text-xs font-semibold text-white bg-gradient-to-r from-amber-500 to-purple-600 hover:from-amber-600 hover:to-purple-700 shadow-sm transition-all cursor-pointer whitespace-nowrap"
                 >
-                  <X className="w-3 h-3" />
+                  Upgrade to Pro to Chat
                 </button>
               </div>
-            )}
-            <form onSubmit={handleSubmit} className="relative">
-              <textarea
-                ref={textareaRef}
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                onKeyDown={handleKeyDown}
-                className={`w-full p-3 pr-12 rounded-lg focus:outline-none resize-none transition ${
-                  theme === 'dark'
-                    ? 'bg-zinc-900 border border-zinc-800 focus:ring-1 focus:ring-[#00DA83]'
-                    : 'bg-white border border-gray-300 focus:ring-1 focus:ring-green-500'
-                }`}
-                placeholder={pdfFile ? "Ask questions about the PDF..." : "Upload a PDF to start chatting"}
-                rows={1}
-                disabled={loading || !pdfFile}
-              />
-              <button
-                type="submit"
-                disabled={loading || !pdfFile || !message.trim()}
-                className={`absolute right-2 bottom-2 p-2 rounded-lg transition ${
-                  loading || !pdfFile || !message.trim()
-                    ? theme === 'dark' 
-                      ? 'text-zinc-600' 
-                      : 'text-gray-400'
-                    : theme === 'dark'
-                      ? 'text-[#00DA83] hover:bg-zinc-800'
-                      : 'text-green-600 hover:bg-gray-200'
-                }`}
-                aria-label="Send message"
-              >
-                {loading ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  <Send className="w-5 h-5" />
+            ) : (
+              <>
+                {pdfFile && (
+                  <div className={`flex items-center gap-2 mb-2 text-xs ${
+                    theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'
+                  }`}>
+                    <File className="w-3 h-3" />
+                    <span className="truncate">{pdfFile.name}</span>
+                    <button 
+                      onClick={removeFile}
+                      className={`ml-auto transition-colors ${
+                        theme === 'dark' ? 'text-zinc-500 hover:text-red-400' : 'text-gray-400 hover:text-red-500'
+                      }`}
+                      aria-label="Remove file"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
                 )}
-              </button>
-            </form>
+                <form onSubmit={handleSubmit} className="relative">
+                  <textarea
+                    ref={textareaRef}
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    className={`w-full p-3 pr-12 rounded-lg focus:outline-none resize-none transition ${
+                      theme === 'dark'
+                        ? 'bg-zinc-900 border border-zinc-800 focus:ring-1 focus:ring-[#00DA83]'
+                        : 'bg-white border border-gray-300 focus:ring-1 focus:ring-green-500'
+                    }`}
+                    placeholder={pdfFile ? "Ask questions about the PDF..." : "Upload a PDF to start chatting"}
+                    rows={1}
+                    disabled={loading || !pdfFile}
+                  />
+                  <button
+                    type="submit"
+                    disabled={loading || !pdfFile || !message.trim()}
+                    className={`absolute right-2 bottom-2 p-2 rounded-lg transition ${
+                      loading || !pdfFile || !message.trim()
+                        ? theme === 'dark' 
+                          ? 'text-zinc-600' 
+                          : 'text-gray-400'
+                        : theme === 'dark'
+                          ? 'text-[#00DA83] hover:bg-zinc-800'
+                          : 'text-green-600 hover:bg-gray-200'
+                    }`}
+                    aria-label="Send message"
+                  >
+                    {loading ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <Send className="w-5 h-5" />
+                    )}
+                  </button>
+                </form>
+              </>
+            )}
           </div>
         </div>
       </div>

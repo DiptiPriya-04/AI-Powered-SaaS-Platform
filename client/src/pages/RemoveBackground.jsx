@@ -1,4 +1,4 @@
-import { Eraser, Sparkles, Download, X, Eye, EyeOff } from 'lucide-react';
+import { Eraser, Sparkles, Download, X, Eye, EyeOff, Crown } from 'lucide-react';
 import React, { useState, useRef } from 'react'
 import axios from 'axios'
 import { useAuth } from '@clerk/clerk-react';
@@ -21,7 +21,7 @@ const RemoveBackground = () => {
   const fileInputRef = useRef(null)
   const { theme } = useTheme();
   const { getToken } = useAuth()
-  const { openUpgradeModal, refreshPlan } = usePlan();
+  const { openUpgradeModal, refreshPlan, isPremium } = usePlan();
 
   const handleFileChange = (e) => {
     const file = e.target.files[0]
@@ -52,6 +52,11 @@ const RemoveBackground = () => {
 
   const onSubmitHandler = async (e) => {
     e.preventDefault();
+    if (!isPremium) {
+      toast.error("👑 Background Removal is a Pro feature. Please upgrade to Pro to unlock this tool.");
+      openUpgradeModal();
+      return;
+    }
     if (!input) return;
     
     try {
@@ -161,12 +166,43 @@ const RemoveBackground = () => {
           ? 'bg-zinc-900 border-zinc-700' 
           : 'bg-white border-gray-200'
       }`}>
-        <div className='flex items-center gap-3 mb-6'>
-          <Sparkles className={`w-6 h-6 ${
-            theme === 'dark' ? 'text-[#FF4938]' : 'text-red-600'
-          }`}/>
-          <h1 className='text-xl font-semibold'>Background Removal</h1>
+        <div className='flex items-center justify-between mb-6'>
+          <div className='flex items-center gap-3'>
+            <Sparkles className={`w-6 h-6 ${
+              theme === 'dark' ? 'text-[#FF4938]' : 'text-red-600'
+            }`}/>
+            <div>
+              <h1 className='text-xl font-semibold'>Background Removal</h1>
+              <p className={`text-xs ${theme === 'dark' ? 'text-zinc-400' : 'text-zinc-500'}`}>
+                Instant high-precision subject segmentation & transparency
+              </p>
+            </div>
+          </div>
+          <span className="flex items-center gap-1 text-xs font-bold uppercase tracking-wider bg-gradient-to-r from-amber-500 to-purple-600 text-white px-2.5 py-1 rounded-full shadow-sm">
+            <Crown className="w-3 h-3" /> PRO
+          </span>
         </div>
+
+        {!isPremium && (
+          <div className="mb-6 p-4 rounded-xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-purple-500/10 to-indigo-500/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 rounded-lg bg-amber-500/20 text-amber-400">
+                <Crown className="w-4 h-4" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-amber-400">Pro Feature Locked</p>
+                <p className="text-[11px] text-zinc-400">Upgrade to CreationSuite Pro to remove background from images.</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={openUpgradeModal}
+              className="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 shadow-md transition-all cursor-pointer whitespace-nowrap"
+            >
+              Upgrade to Pro
+            </button>
+          </div>
+        )}
         
         <div className='space-y-6'>
           <div>
@@ -232,22 +268,33 @@ const RemoveBackground = () => {
             )}
           </div>
 
-          <button 
-            disabled={loading || !input} 
-            className={`w-full flex justify-center items-center gap-2 bg-gradient-to-r from-[#F6AB41] to-[#FF4938] text-white px-4 py-3 text-sm rounded-lg transition-all hover:shadow-lg ${
-              theme === 'dark' 
-                ? 'hover:shadow-orange-500/20' 
-                : 'hover:shadow-orange-400/30'
-            } ${
-              loading || !input ? 'opacity-80 cursor-not-allowed' : ''
-            }`}
-          >
-            {
-              loading ? <span className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin"></span>
-              : <Eraser className='w-5 h-5'/>
-            }
-            Remove Background
-          </button>
+          {!isPremium ? (
+            <button
+              type="button"
+              onClick={openUpgradeModal}
+              className="w-full flex justify-center items-center gap-2 bg-gradient-to-r from-amber-500 to-purple-600 text-white px-4 py-3 text-sm font-semibold rounded-lg hover:shadow-lg hover:shadow-amber-500/25 transition-all cursor-pointer"
+            >
+              <Crown className="w-4 h-4 text-amber-200" />
+              Upgrade to Pro to Remove Background
+            </button>
+          ) : (
+            <button 
+              disabled={loading || !input} 
+              className={`w-full flex justify-center items-center gap-2 bg-gradient-to-r from-[#F6AB41] to-[#FF4938] text-white px-4 py-3 text-sm rounded-lg transition-all hover:shadow-lg ${
+                theme === 'dark' 
+                  ? 'hover:shadow-orange-500/20' 
+                  : 'hover:shadow-orange-400/30'
+              } ${
+                loading || !input ? 'opacity-80 cursor-not-allowed' : ''
+              }`}
+            >
+              {
+                loading ? <span className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin"></span>
+                : <Eraser className='w-5 h-5'/>
+              }
+              Remove Background
+            </button>
+          )}
 
           {loading && statusMessage && (
             <div className="flex items-center gap-2 justify-center text-xs text-orange-400 animate-pulse pt-1">

@@ -62,28 +62,32 @@ export const AiToolsData = [
         description: 'Transform your ideas into breathtaking visuals with our AI-powered art generator.',
         Icon: Image,
         bg: { from: '#20C363', to: '#11B97E' },
-        path: '/ai/generate-images'
+        path: '/ai/generate-images',
+        premium: true
     },
     {
         title: 'AI Background Eraser',
         description: 'Get clean, background-free images in seconds with our AI-powered remover.',
         Icon: Eraser,
         bg: { from: '#F76C1C', to: '#F04A3C' },
-        path: '/ai/remove-background'
+        path: '/ai/remove-background',
+        premium: true
     },
     {
         title: 'AI Object Eraser',
         description: 'Eliminate distracting elements from your images with AI-powered precision.',
         Icon: Scissors,
         bg: { from: '#5C6AF1', to: '#427DF5' },
-        path: '/ai/remove-object'
+        path: '/ai/remove-object',
+        premium: true
     },
     {
         title: 'Chat With PDF',
         description: 'Upload and interact with PDF documents using our AI-powered chat interface.',
         Icon: MessageSquare,
         bg: { from: '#00DA83', to: '#009BB3' },
-        path: '/ai/chat-with-pdf'
+        path: '/ai/chat-with-pdf',
+        premium: true
     },
 ];
 

@@ -96,7 +96,8 @@ export const getUserData = async (req, res) => {
         if (process.env.CLERK_SECRET_KEY) {
             try {
                 const user = await clerkClient.users.getUser(userId);
-                userPlan = user.publicMetadata?.plan || userPlan;
+                const rawPlan = user.publicMetadata?.plan;
+                userPlan = (rawPlan === 'premium' || rawPlan === 'pro') ? 'premium' : 'free';
                 freeUsage = user.publicMetadata?.free_usage ?? user.privateMetadata?.free_usage ?? freeUsage;
             } catch (err) {
                 console.warn("Clerk fetch note in getUserData:", err.message);

@@ -5,7 +5,7 @@ export const auth = async (req, res, next) => {
     try {
         if (!process.env.CLERK_PUBLISHABLE_KEY || !process.env.CLERK_SECRET_KEY) {
             req.userId = "dev_user_sandbox";
-            req.plan = "premium";
+            req.plan = "free";
             req.free_usage = 0;
             return next();
         }
@@ -15,15 +15,6 @@ export const auth = async (req, res, next) => {
 
         if (!userId) {
             return res.status(401).json({ success: false, message: "Unauthorized access. Please log in." });
-        }
-
-        let hasPremiumPlan = false;
-        try {
-            if (typeof authData?.has === 'function') {
-                hasPremiumPlan = Boolean(authData.has({ plan: 'premium' }));
-            }
-        } catch (e) {
-            hasPremiumPlan = false;
         }
 
         let user = null;
@@ -36,24 +27,26 @@ export const auth = async (req, res, next) => {
         }
 
         const freeUsage = user?.publicMetadata?.free_usage ?? user?.privateMetadata?.free_usage ?? 0;
+        
+        // Strict plan resolution: only users who explicitly upgraded have 'premium' in metadata
         const currentMetadataPlan = user?.publicMetadata?.plan;
-        const resolvedPlan = (currentMetadataPlan === 'premium' || currentMetadataPlan === 'pro' || hasPremiumPlan) ? 'premium' : 'free';
+        const resolvedPlan = (currentMetadataPlan === 'premium' || currentMetadataPlan === 'pro') ? 'premium' : 'free';
 
         req.userId = userId;
         req.plan = resolvedPlan;
         req.free_usage = freeUsage;
 
-        // Ensure publicMetadata has free_usage and plan for frontend visibility
-        if (user.publicMetadata?.free_usage === undefined || user.publicMetadata?.plan !== req.plan) {
+        // Ensure newly registered users are initialized with plan: 'free' and free_usage: 0
+        if (user && (user.publicMetadata?.plan === undefined || user.publicMetadata?.free_usage === undefined)) {
             await clerkClient.users.updateUserMetadata(userId, {
                 publicMetadata: {
                     free_usage: freeUsage,
-                    plan: req.plan
+                    plan: resolvedPlan
                 },
                 privateMetadata: {
                     free_usage: freeUsage
                 }
-            }).catch(err => console.error("Metadata update warning:", err.message));
+            }).catch(err => console.warn("Clerk metadata init note:", err.message));
         }
 
         next();

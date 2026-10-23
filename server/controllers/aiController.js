@@ -301,10 +301,11 @@ export const generateImage = async (req, res) => {
             return res.json({ success: false, message: "Please provide an image prompt" });
         }
 
-        if (plan !== 'premium' && free_usage >= 30) {
+        if (plan !== 'premium') {
             return res.json({
                 success: false,
-                message: "Free limit reached (30/30). Please upgrade to premium to continue."
+                isPremiumRequired: true,
+                message: "👑 Generate Images is a Pro feature. Please upgrade to Pro to unlock unlimited image generation."
             });
         }
 
@@ -391,10 +392,11 @@ export const removeImageBackground = async (req, res) => {
             });
         }
 
-        if (plan !== 'premium' && free_usage >= 30) {
+        if (plan !== 'premium') {
             return res.json({
                 success: false,
-                message: "Free limit reached (30/30). Please upgrade to continue."
+                isPremiumRequired: true,
+                message: "👑 Background Removal is a Pro feature. Please upgrade to Pro to unlock this tool."
             });
         }
 
@@ -468,10 +470,11 @@ export const removeImageObject = async (req, res) => {
             });
         }
 
-        if (plan !== 'premium' && free_usage >= 30) {
+        if (plan !== 'premium') {
             return res.json({
                 success: false,
-                message: "Free limit reached (30/30). Please upgrade to continue."
+                isPremiumRequired: true,
+                message: "👑 Object Removal is a Pro feature. Please upgrade to Pro to unlock this tool."
             });
         }
 
@@ -739,6 +742,14 @@ export const chatWithPDF = async (req, res) => {
         const pdfFile = req.file;
         const plan = req.plan || 'free';
         const free_usage = req.free_usage ?? 0;
+
+        if (plan !== 'premium') {
+            return res.json({
+                success: false,
+                isPremiumRequired: true,
+                message: "👑 Chat With PDF is a Pro feature. Please upgrade to Pro to unlock conversational PDF analysis."
+            });
+        }
 
         if (!pdfFile || !pdfFile.buffer) {
             return res.status(400).json({

@@ -3,6 +3,7 @@ import { AiToolsData } from '../assets/assets'
 import { useNavigate } from 'react-router-dom'
 import { useUser } from '@clerk/clerk-react'
 import { useTheme } from '../context/ThemeContext'
+import { Crown } from 'lucide-react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
@@ -96,13 +97,18 @@ const AiTools = () => {
             {/* Card content */}
             <div className='relative z-10'>
               {/* Icon container */}
-              <div className='mb-6'>
+              <div className='mb-6 flex items-center justify-between'>
                 <tool.Icon 
                   className='tool-icon w-12 h-12 p-3 text-white rounded-xl shadow-lg transition-all duration-300' 
                   style={{
                     background: `linear-gradient(135deg, ${tool.bg.from}, ${tool.bg.to})`
                   }}
                 />
+                {tool.premium && (
+                  <span className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider bg-gradient-to-r from-amber-500 to-purple-600 text-white px-2 py-0.5 rounded-full shadow-sm">
+                    <Crown className="w-3 h-3 text-amber-200" /> PRO
+                  </span>
+                )}
               </div>
               
               {/* Content */}

@@ -23,6 +23,12 @@ const GenerateImages = () => {
 
   const onSubmitHandler = async (e)=>{
     e.preventDefault();
+    if (!isPremium) {
+      toast.error("👑 Generate Images is a Pro feature. Please upgrade to Pro to unlock unlimited image generation.");
+      openUpgradeModal();
+      return;
+    }
+
     if (!input.trim()) {
       toast.error("Please enter a description for the image");
       return;
@@ -105,12 +111,43 @@ const GenerateImages = () => {
           ? 'bg-zinc-900 border-zinc-700' 
           : 'bg-white border-gray-200'
       }`}>
-        <div className='flex items-center gap-3 mb-6'>
-          <Sparkles className={`w-6 h-6 ${
-            theme === 'dark' ? 'text-[#4A7AFF]' : 'text-blue-600'
-          }`}/>
-          <h1 className='text-xl font-semibold'>Image Configuration</h1>
+        <div className='flex items-center justify-between mb-6'>
+          <div className='flex items-center gap-3'>
+            <Sparkles className={`w-6 h-6 ${
+              theme === 'dark' ? 'text-[#4A7AFF]' : 'text-blue-600'
+            }`}/>
+            <div>
+              <h1 className='text-xl font-semibold'>Image Configuration</h1>
+              <p className={`text-xs ${theme === 'dark' ? 'text-zinc-400' : 'text-zinc-500'}`}>
+                Synthesize high-resolution visual art with 8 curated styles
+              </p>
+            </div>
+          </div>
+          <span className="flex items-center gap-1 text-xs font-bold uppercase tracking-wider bg-gradient-to-r from-amber-500 to-purple-600 text-white px-2.5 py-1 rounded-full shadow-sm">
+            <Crown className="w-3 h-3" /> PRO
+          </span>
         </div>
+
+        {!isPremium && (
+          <div className="mb-6 p-4 rounded-xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-purple-500/10 to-indigo-500/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 rounded-lg bg-amber-500/20 text-amber-400">
+                <Crown className="w-4 h-4" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-amber-400">Pro Feature Locked</p>
+                <p className="text-[11px] text-zinc-400">Upgrade to CreationSuite Pro to unlock unlimited image generation.</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={openUpgradeModal}
+              className="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 shadow-md transition-all cursor-pointer whitespace-nowrap"
+            >
+              Upgrade to Pro
+            </button>
+          </div>
+        )}
         
         <div className='space-y-6'>
           <div>
@@ -176,22 +213,33 @@ const GenerateImages = () => {
             }`}>Make this image public</span>
           </div>
 
-          <button 
-            disabled={loading} 
-            className={`w-full flex justify-center items-center gap-2 bg-gradient-to-r from-[#226BFF] to-[#65ADFF] text-white px-4 py-3 text-sm rounded-lg transition-all hover:shadow-lg ${
-              theme === 'dark' 
-                ? 'hover:shadow-blue-500/20' 
-                : 'hover:shadow-blue-400/30'
-            } ${
-              loading ? 'opacity-80 cursor-not-allowed' : ''
-            }`}
-          >
-            {
-              loading ? <span className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin"></span>
-              : <Image className='w-5 h-5'/>
-            }
-            Generate Image
-          </button>
+          {!isPremium ? (
+            <button
+              type="button"
+              onClick={openUpgradeModal}
+              className="w-full flex justify-center items-center gap-2 bg-gradient-to-r from-amber-500 to-purple-600 text-white px-4 py-3 text-sm font-semibold rounded-lg hover:shadow-lg hover:shadow-amber-500/25 transition-all cursor-pointer"
+            >
+              <Crown className="w-4 h-4 text-amber-200" />
+              Upgrade to Pro to Generate Images
+            </button>
+          ) : (
+            <button 
+              disabled={loading} 
+              className={`w-full flex justify-center items-center gap-2 bg-gradient-to-r from-[#226BFF] to-[#65ADFF] text-white px-4 py-3 text-sm rounded-lg transition-all hover:shadow-lg ${
+                theme === 'dark' 
+                  ? 'hover:shadow-blue-500/20' 
+                  : 'hover:shadow-blue-400/30'
+              } ${
+                loading ? 'opacity-80 cursor-not-allowed' : ''
+              }`}
+            >
+              {
+                loading ? <span className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin"></span>
+                : <Image className='w-5 h-5'/>
+              }
+              Generate Image
+            </button>
+          )}
         </div>
       </form>
 
