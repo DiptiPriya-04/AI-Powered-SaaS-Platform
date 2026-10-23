@@ -1,13 +1,22 @@
 # 🚀 AI-Powered SaaS Platform (CreationSuite.ai)
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-CreationSuite.ai-6366f1?style=for-the-badge&logo=vercel&logoColor=white)](https://ai-powered-saas-platform-diptipriya-04s-projects.vercel.app)
+[![Demo Video](https://img.shields.io/badge/Demo%20Video-Watch%20Walkthrough-FF5722?style=for-the-badge&logo=google-drive&logoColor=white)](https://drive.google.com/file/d/1lFeWDp-nr-AiHgBEWxsHBDnZ6Yz_pgb7/view?usp=sharing)
 [![React 19](https://img.shields.io/badge/Frontend-React%2019%20%2B%20Vite-61dafb?style=flat-square&logo=react)](https://react.dev)
 [![Node.js](https://img.shields.io/badge/Backend-Node.js%20%2B%20Express-339933?style=flat-square&logo=node.js)](https://nodejs.org)
 [![PostgreSQL](https://img.shields.io/badge/Database-Neon%20Serverless%20Postgres-00e699?style=flat-square&logo=postgresql)](https://neon.tech)
 
 > **All-in-one AI Creation Suite & Productivity Platform** — Create high-quality articles, generate catchy blog titles, humanize robotic text, evaluate resumes with recruiter feedback, check job ATS compatibility, generate stunning images with 8 art styles, remove backgrounds with transparent cutouts, interactive brush object inpainting, and chat with PDF documents in real-time.
 
-🌐 **Live Deployed Application:** [https://ai-powered-saas-platform-diptipriya-04s-projects.vercel.app](https://ai-powered-saas-platform-diptipriya-04s-projects.vercel.app)
+🌐 **Live Deployed Application:** [https://ai-powered-saas-platform-diptipriya-04s-projects.vercel.app](https://ai-powered-saas-platform-diptipriya-04s-projects.vercel.app)  
+🎥 **Live Video Demonstration:** [Watch Demo Video (Google Drive)](https://drive.google.com/file/d/1lFeWDp-nr-AiHgBEWxsHBDnZ6Yz_pgb7/view?usp=sharing)
+
+---
+
+## 🎥 Video Demonstration
+
+Watch the complete platform walkthrough and interactive AI tool demonstration:  
+👉 **[Watch CreationSuite.ai Full Demo Video (Google Drive)](https://drive.google.com/file/d/1lFeWDp-nr-AiHgBEWxsHBDnZ6Yz_pgb7/view?usp=sharing)**
 
 ---
 
