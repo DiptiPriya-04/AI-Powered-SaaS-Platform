@@ -2,16 +2,30 @@ import sql from "../configs/db.js";
 import { clerkClient, getAuth } from "@clerk/express";
 
 const getRequestUserId = (req) => {
-    if (req.userId) return req.userId;
-    const authData = getAuth(req);
-    return authData?.userId;
+    if (req.userId && req.userId !== "dev_user_sandbox") return req.userId;
+    try {
+        const authData = getAuth(req);
+        if (authData?.userId) return authData.userId;
+    } catch {}
+    const authHeader = req.headers?.authorization || req.headers?.Authorization;
+    if (authHeader && typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
+        try {
+            const token = authHeader.split(' ')[1];
+            const parts = token.split('.');
+            if (parts.length === 3) {
+                const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf-8'));
+                if (payload.sub || payload.userId) return payload.sub || payload.userId;
+            }
+        } catch {}
+    }
+    return req.userId || null;
 };
 
 export const getUserCreations = async (req, res) => {
     try {
         const userId = getRequestUserId(req);
-        if (!userId) {
-            return res.status(401).json({ success: false, message: "Unauthorized" });
+        if (!userId || userId === 'dev_user_sandbox') {
+            return res.json({ success: true, creations: [] });
         }
 
         const creations = await sql`SELECT * FROM creations WHERE user_id = ${userId} ORDER BY created_at DESC`.catch(err => {

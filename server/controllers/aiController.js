@@ -19,9 +19,23 @@ const parsePdf = typeof pdfModule === 'function' ? pdfModule : (pdfModule.defaul
 
 // Helper to safely extract userId from request
 const getRequestUserId = (req) => {
-    if (req.userId) return req.userId;
-    const authData = getAuth(req);
-    return authData?.userId;
+    if (req.userId && req.userId !== "dev_user_sandbox") return req.userId;
+    try {
+        const authData = getAuth(req);
+        if (authData?.userId) return authData.userId;
+    } catch {}
+    const authHeader = req.headers?.authorization || req.headers?.Authorization;
+    if (authHeader && typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
+        try {
+            const token = authHeader.split(' ')[1];
+            const parts = token.split('.');
+            if (parts.length === 3) {
+                const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf-8'));
+                if (payload.sub || payload.userId) return payload.sub || payload.userId;
+            }
+        } catch {}
+    }
+    return req.userId || null;
 };
 
 // Check if a real, valid Google Gemini key is present
@@ -850,8 +864,8 @@ export const chatWithPDF = async (req, res) => {
 export const getPDFChatHistory = async (req, res) => {
     try {
         const userId = getRequestUserId(req);
-        if (!userId) {
-            return res.status(401).json({ success: false, message: "Unauthorized. Please log in." });
+        if (!userId || userId === 'dev_user_sandbox') {
+            return res.json({ success: true, files: [] });
         }
 
         const { file_name } = req.query;

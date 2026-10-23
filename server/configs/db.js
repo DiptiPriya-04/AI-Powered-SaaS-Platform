@@ -29,6 +29,9 @@ export const initDb = async (client) => {
                 created_at TIMESTAMPTZ DEFAULT NOW()
             );
         `;
+        // Clean up any legacy test/sandbox records so no user ever sees previous developer test files
+        await client`DELETE FROM creations WHERE user_id = 'dev_user_sandbox' OR user_id = 'user_sample'`.catch(() => {});
+        await client`DELETE FROM pdf_chats WHERE user_id = 'dev_user_sandbox' OR user_id = 'user_sample'`.catch(() => {});
         initialized = true;
         console.log("✅ Database tables verified/initialized successfully.");
     } catch (e) {

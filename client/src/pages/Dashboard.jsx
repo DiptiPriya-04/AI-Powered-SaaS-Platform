@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Gem, Sparkles, FileText, ChevronRight, Crown, ArrowUpRight, Zap } from 'lucide-react';
-import { useAuth } from '@clerk/clerk-react';
+import { useAuth, useUser } from '@clerk/clerk-react';
 import { useNavigate } from 'react-router-dom';
 import CreationItem from '../components/CreationItem';
 import axios from 'axios';
@@ -17,6 +17,7 @@ const Dashboard = () => {
   const [showAllCreations, setShowAllCreations] = useState(false);
   const [showAllPdfChats, setShowAllPdfChats] = useState(false);
   const { getToken } = useAuth();
+  const { user } = useUser();
   const navigate = useNavigate();
   const { theme } = useTheme();
 
@@ -287,18 +288,94 @@ const Dashboard = () => {
               ))}
             </div>
           ) : (
-            <div className={`p-6 rounded-xl border text-center ${
+            <div className={`p-6 sm:p-8 rounded-2xl border text-center transition-all ${
               theme === 'dark' 
-                ? 'bg-zinc-900 border-zinc-800 text-gray-400' 
-                : 'bg-white border-gray-200 text-gray-600'
+                ? 'bg-zinc-900/60 border-zinc-800' 
+                : 'bg-white border-gray-200 shadow-sm'
             }`}>
-              <p>No creations found</p>
-              <button
-                onClick={navigateToCreate}
-                className="mt-2 px-4 py-2 bg-[#00DA83] hover:bg-[#00c978] text-white rounded-lg transition-colors"
-              >
-                Create Your First Content
-              </button>
+              <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+                <Sparkles className="w-7 h-7" />
+              </div>
+              <h3 className={`text-lg sm:text-xl font-bold mb-1 ${
+                theme === 'dark' ? 'text-white' : 'text-zinc-900'
+              }`}>
+                Welcome to your AI workspace, {user?.firstName || 'Creator'}! ✨
+              </h3>
+              <p className={`text-xs sm:text-sm max-w-md mx-auto mb-6 ${
+                theme === 'dark' ? 'text-zinc-400' : 'text-zinc-500'
+              }`}>
+                You have not created any content yet. Select an AI tool below to make your first creation:
+              </p>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-left">
+                <button
+                  type="button"
+                  onClick={() => navigate('/ai/write-article')}
+                  className={`p-4 rounded-xl border transition-all hover:scale-[1.02] cursor-pointer ${
+                    theme === 'dark' 
+                      ? 'bg-zinc-800/80 border-zinc-700 hover:border-blue-500/50' 
+                      : 'bg-zinc-50 border-zinc-200 hover:border-blue-500/50 hover:bg-white'
+                  }`}
+                >
+                  <p className="font-semibold text-xs text-blue-500 flex items-center gap-1.5 mb-1">
+                    ✍️ Write Article
+                  </p>
+                  <p className={`text-[11px] leading-snug ${theme === 'dark' ? 'text-zinc-400' : 'text-zinc-600'}`}>
+                    Generate full-length authoritative articles on any topic.
+                  </p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => navigate('/ai/blog-titles')}
+                  className={`p-4 rounded-xl border transition-all hover:scale-[1.02] cursor-pointer ${
+                    theme === 'dark' 
+                      ? 'bg-zinc-800/80 border-zinc-700 hover:border-purple-500/50' 
+                      : 'bg-zinc-50 border-zinc-200 hover:border-purple-500/50 hover:bg-white'
+                  }`}
+                >
+                  <p className="font-semibold text-xs text-purple-500 flex items-center gap-1.5 mb-1">
+                    💡 Title Suggester
+                  </p>
+                  <p className={`text-[11px] leading-snug ${theme === 'dark' ? 'text-zinc-400' : 'text-zinc-600'}`}>
+                    Catchy, viral headlines for your articles and blogs.
+                  </p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => navigate('/ai/humanize-text')}
+                  className={`p-4 rounded-xl border transition-all hover:scale-[1.02] cursor-pointer ${
+                    theme === 'dark' 
+                      ? 'bg-zinc-800/80 border-zinc-700 hover:border-amber-500/50' 
+                      : 'bg-zinc-50 border-zinc-200 hover:border-amber-500/50 hover:bg-white'
+                  }`}
+                >
+                  <p className="font-semibold text-xs text-amber-500 flex items-center gap-1.5 mb-1">
+                    ⚡ Humanize Text
+                  </p>
+                  <p className={`text-[11px] leading-snug ${theme === 'dark' ? 'text-zinc-400' : 'text-zinc-600'}`}>
+                    Convert AI prose into organic, natural writing.
+                  </p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => navigate('/ai/calculate-ats-score')}
+                  className={`p-4 rounded-xl border transition-all hover:scale-[1.02] cursor-pointer ${
+                    theme === 'dark' 
+                      ? 'bg-zinc-800/80 border-zinc-700 hover:border-emerald-500/50' 
+                      : 'bg-zinc-50 border-zinc-200 hover:border-emerald-500/50 hover:bg-white'
+                  }`}
+                >
+                  <p className="font-semibold text-xs text-emerald-500 flex items-center gap-1.5 mb-1">
+                    📊 ATS Resume Check
+                  </p>
+                  <p className={`text-[11px] leading-snug ${theme === 'dark' ? 'text-zinc-400' : 'text-zinc-600'}`}>
+                    Score and optimize your resume for recruiters.
+                  </p>
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -370,17 +447,31 @@ const Dashboard = () => {
               ))}
             </div>
           ) : (
-            <div className={`p-6 rounded-xl border text-center ${
+            <div className={`p-6 sm:p-8 rounded-2xl border text-center transition-all ${
               theme === 'dark' 
-                ? 'bg-zinc-900 border-zinc-800 text-gray-400' 
-                : 'bg-white border-gray-200 text-gray-600'
+                ? 'bg-zinc-900/60 border-zinc-800' 
+                : 'bg-white border-gray-200 shadow-sm'
             }`}>
-              <p>No PDF chats found</p>
+              <div className="w-12 h-12 mx-auto mb-3 rounded-2xl bg-[#00DA83]/15 border border-[#00DA83]/30 flex items-center justify-center text-[#00DA83]">
+                <FileText className="w-6 h-6" />
+              </div>
+              <h3 className={`text-base sm:text-lg font-bold mb-1 ${
+                theme === 'dark' ? 'text-white' : 'text-zinc-900'
+              }`}>
+                No PDF Documents Analyzed Yet
+              </h3>
+              <p className={`text-xs sm:text-sm max-w-sm mx-auto mb-4 ${
+                theme === 'dark' ? 'text-zinc-400' : 'text-zinc-500'
+              }`}>
+                Upload any PDF to ask questions, extract key summaries, and interact directly with your documents.
+              </p>
               <button
+                type="button"
                 onClick={navigateToPdfChat}
-                className="mt-2 px-4 py-2 bg-[#00DA83] hover:bg-[#00c978] text-white rounded-lg transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-semibold rounded-xl shadow-md transition-all cursor-pointer"
               >
-                Start New PDF Chat
+                <FileText className="w-4 h-4" />
+                Upload PDF & Start Chat
               </button>
             </div>
           )}
